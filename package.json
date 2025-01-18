@@ -12,7 +12,8 @@
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.2.2",
     "uuid": "^9.0.1",
-    "@types/uuid": "^9.0.7"
+    "@types/uuid": "^9.0.7",
+    "serve": "^14.2.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
@@ -22,6 +23,7 @@
     "postinstall": "npm link vite",
     "dev": "vite",
     "build": "$PWD/node_modules/.bin/vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "serve dist -s -p $PORT"
   }
 }
