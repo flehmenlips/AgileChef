@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import webhookRoutes from './routes/webhooks';
@@ -17,7 +17,7 @@ app.use(express.json());
 app.use('/webhooks', webhookRoutes);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 

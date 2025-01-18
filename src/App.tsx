@@ -1,5 +1,6 @@
 import React from 'react';
 import { DropResult } from '@hello-pangea/dnd';
+import Layout from './components/Layout/Layout';
 import KanbanBoard from './components/KanbanBoard/KanbanBoard';
 import { useBoardStore } from './store/boardStore';
 import styles from './App.module.css';
@@ -28,13 +29,19 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={styles.app}>
+    <Layout>
+      <div className={styles.pageHeader}>
+        <h2 className={styles.pageTitle}>Recipe Development Board</h2>
+        <p className={styles.pageDescription}>
+          Track and manage your recipe development process
+        </p>
+      </div>
       <KanbanBoard
         columns={columns}
         onDragEnd={handleDragEnd}
         onAddColumn={addColumn}
       />
-    </div>
+    </Layout>
   );
 };
 
