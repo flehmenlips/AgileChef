@@ -1,0 +1,17 @@
+.container {
+  min-height: 100vh;
+  background-color: #f5f6f8;
+}
+
+.header {
+  background-color: #ffffff;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #172b4d;
+} 

@@ -1,0 +1,12 @@
+.board {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  min-height: calc(100vh - 100px);
+  overflow-x: auto;
+}
+
+.columnWrapper {
+  flex: 0 0 auto;
+  min-width: 280px;
+} 

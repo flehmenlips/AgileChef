@@ -1,0 +1,83 @@
+.card {
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+  user-select: none;
+}
+
+.card.dragging {
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+  background-color: #fafbfc;
+}
+
+.card:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.title {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #172b4d;
+}
+
+.description {
+  margin: 0 0 8px 0;
+  font-size: 0.8rem;
+  color: #5e6c84;
+}
+
+.metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.labels {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.label {
+  background-color: #e2e4e9;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  color: #42526e;
+}
+
+.dueDate {
+  font-size: 0.7rem;
+  color: #42526e;
+  padding: 2px 8px;
+  background-color: #f4f5f7;
+  border-radius: 12px;
+}
+
+.priority {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: capitalize;
+}
+
+.priority-high {
+  background-color: #ffebe6;
+  color: #bf2600;
+}
+
+.priority-medium {
+  background-color: #fffae6;
+  color: #7f5f01;
+}
+
+.priority-low {
+  background-color: #e3fcef;
+  color: #006644;
+} 
