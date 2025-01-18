@@ -5,14 +5,21 @@ export interface KanbanColumn {
   limit?: number;
 }
 
+export interface Ingredient {
+  id: string;
+  quantity: number;
+  unit: 'g' | 'oz' | 'cup' | 'tbsp' | 'tsp' | 'lb' | 'kg' | 'ml' | 'l' | 'piece' | 'pinch';
+  name: string;
+}
+
 export interface KanbanCard {
   id: string;
   title: string;
-  description?: string;
-  dueDate?: Date;
+  ingredients: Ingredient[];
+  instructions: string[];
+  status: 'fully-stocked' | 'low-stock' | 'out-of-stock' | 'in-progress' | 'dormant';
   labels?: string[];
   assignees?: string[];
-  priority?: 'low' | 'medium' | 'high';
   createdAt: Date;
   updatedAt: Date;
 }
