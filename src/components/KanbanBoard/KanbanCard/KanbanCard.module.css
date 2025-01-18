@@ -1,32 +1,31 @@
 .card {
   background-color: white;
   border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  padding: 8px;
   margin-bottom: 8px;
-  cursor: pointer;
+  cursor: grab;
   transition: box-shadow 0.2s ease;
-  user-select: none;
+}
+
+.card:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .card.dragging {
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
-  background-color: #fafbfc;
-}
-
-.card:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  opacity: 0.9;
 }
 
 .title {
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #172b4d;
 }
 
 .description {
-  margin: 0 0 8px 0;
+  margin: 4px 0;
   font-size: 0.8rem;
   color: #5e6c84;
 }
@@ -34,37 +33,56 @@
 .metadata {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
 }
 
 .labels {
   display: flex;
-  gap: 4px;
   flex-wrap: wrap;
+  gap: 4px;
 }
 
 .label {
-  background-color: #e2e4e9;
-  padding: 2px 8px;
+  background-color: #ebecf0;
+  color: #42526e;
+  padding: 2px 6px;
   border-radius: 12px;
   font-size: 0.7rem;
-  color: #42526e;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.dueDate {
-  font-size: 0.7rem;
+.removeLabel {
+  background: none;
+  border: none;
   color: #42526e;
-  padding: 2px 8px;
-  background-color: #f4f5f7;
-  border-radius: 12px;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.removeLabel:hover {
+  color: #172b4d;
 }
 
 .priority {
+  padding: 2px 6px;
+  border-radius: 3px;
   font-size: 0.7rem;
-  padding: 2px 8px;
-  border-radius: 12px;
-  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.priority-low {
+  background-color: #e3fcef;
+  color: #006644;
+}
+
+.priority-medium {
+  background-color: #fff7e6;
+  color: #974f0c;
 }
 
 .priority-high {
@@ -72,12 +90,145 @@
   color: #bf2600;
 }
 
-.priority-medium {
-  background-color: #fffae6;
-  color: #7f5f01;
+/* Card Form Styles */
+.cardForm {
+  background-color: white;
+  border-radius: 4px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.priority-low {
-  background-color: #e3fcef;
-  color: #006644;
+.input {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid #dfe1e6;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.input:focus {
+  border-color: #0052cc;
+  outline: none;
+}
+
+.textarea {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid #dfe1e6;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  min-height: 80px;
+  resize: vertical;
+}
+
+.textarea:focus {
+  border-color: #0052cc;
+  outline: none;
+}
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #42526e;
+}
+
+.select {
+  padding: 6px;
+  border: 2px solid #dfe1e6;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background-color: white;
+}
+
+.select:focus {
+  border-color: #0052cc;
+  outline: none;
+}
+
+.labelInput {
+  display: flex;
+  gap: 8px;
+}
+
+.addLabelButton {
+  padding: 8px 12px;
+  background-color: #0052cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.addLabelButton:hover {
+  background-color: #0047b3;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.submitButton,
+.cancelButton {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.submitButton {
+  background-color: #0052cc;
+  color: white;
+}
+
+.submitButton:hover {
+  background-color: #0047b3;
+}
+
+.cancelButton {
+  background-color: #dfe1e6;
+  color: #42526e;
+}
+
+.cancelButton:hover {
+  background-color: #c1c7d0;
+}
+
+/* Card Actions */
+.cardActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.actionButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #42526e;
+  border-radius: 3px;
+}
+
+.actionButton:hover {
+  background-color: #ebecf0;
+  color: #172b4d;
+}
+
+.deleteButton:hover {
+  color: #bf2600;
+  background-color: #ffebe6;
 } 

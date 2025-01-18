@@ -1,14 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { KanbanCard as CardType } from '../../../types/kanban';
+import { useBoardStore } from '../../../store/boardStore';
+import CardForm from './CardForm';
 import styles from './KanbanCard.module.css';
 
 interface KanbanCardProps {
   card: CardType;
   index: number;
+  columnId: string;
 }
 
-const KanbanCard: React.FC<KanbanCardProps> = ({ card, index }) => {
+const KanbanCard: React.FC<KanbanCardProps> = ({ card, index, columnId }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const { updateCard, deleteCard } = useBoardStore();
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleUpdate = (updates: Partial<CardType>) => {
+    updateCard(columnId, card.id, updates);
+    setIsEditing(false);
+  };
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this card?')) {
+      deleteCard(columnId, card.id);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div className={styles.card}>
+        <CardForm
+          card={card}
+          onSubmit={handleUpdate}
+          onCancel={() => setIsEditing(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <Draggable draggableId={card.id} index={index}>
       {(provided, snapshot) => (
@@ -38,6 +71,22 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, index }) => {
                 {card.priority}
               </span>
             )}
+          </div>
+          <div className={styles.cardActions}>
+            <button
+              onClick={handleEdit}
+              className={styles.actionButton}
+              title="Edit card"
+            >
+              ✎
+            </button>
+            <button
+              onClick={handleDelete}
+              className={`${styles.actionButton} ${styles.deleteButton}`}
+              title="Delete card"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}

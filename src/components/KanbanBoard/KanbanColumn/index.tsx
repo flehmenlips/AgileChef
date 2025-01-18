@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { KanbanColumn as ColumnType } from '../../../types/kanban';
+import { useBoardStore } from '../../../store/boardStore';
 import KanbanCard from '../KanbanCard';
+import CardForm from '../KanbanCard/CardForm';
 import styles from './KanbanColumn.module.css';
 
 interface KanbanColumnProps {
@@ -10,6 +12,14 @@ interface KanbanColumnProps {
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({ column }) => {
+  const [isAddingCard, setIsAddingCard] = useState(false);
+  const { addCard } = useBoardStore();
+
+  const handleAddCard = (cardData: any) => {
+    addCard(column.id, cardData.title, cardData.description);
+    setIsAddingCard(false);
+  };
+
   return (
     <div className={styles.column}>
       <div className={styles.header}>
@@ -32,9 +42,25 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ column }) => {
                 key={card.id}
                 card={card}
                 index={cardIndex}
+                columnId={column.id}
               />
             ))}
             {provided.placeholder}
+            {isAddingCard ? (
+              <div className={styles.newCard}>
+                <CardForm
+                  onSubmit={handleAddCard}
+                  onCancel={() => setIsAddingCard(false)}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsAddingCard(true)}
+                className={styles.addCardButton}
+              >
+                + Add Card
+              </button>
+            )}
           </div>
         )}
       </Droppable>
