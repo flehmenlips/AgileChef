@@ -25,6 +25,9 @@ interface BoardState {
   deleteCard: (columnId: string, cardId: string) => void;
   moveCard: (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => void;
   addColumn: (title: string, limit?: number) => void;
+  updateColumn: (columnId: string, updates: Partial<Omit<Column, 'id' | 'cards'>>) => void;
+  deleteColumn: (columnId: string) => void;
+  moveColumn: (sourceIndex: number, destinationIndex: number) => void;
   getCard: (columnId: string, cardId: string) => Card | undefined;
 }
 
@@ -167,9 +170,35 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       ],
     })),
 
+  updateColumn: (columnId: string, updates: Partial<Omit<Column, 'id' | 'cards'>>) =>
+    set((state) => ({
+      columns: state.columns.map((col) => {
+        if (col.id === columnId) {
+          return {
+            ...col,
+            ...updates,
+          };
+        }
+        return col;
+      }),
+    })),
+
+  deleteColumn: (columnId: string) =>
+    set((state) => ({
+      columns: state.columns.filter((col) => col.id !== columnId),
+    })),
+
+  moveColumn: (sourceIndex: number, destinationIndex: number) =>
+    set((state) => {
+      const newColumns = [...state.columns];
+      const [movedColumn] = newColumns.splice(sourceIndex, 1);
+      newColumns.splice(destinationIndex, 0, movedColumn);
+      return { columns: newColumns };
+    }),
+
   getCard: (columnId: string, cardId: string) => {
     const state = get();
     const column = state.columns.find((col) => col.id === columnId);
     return column?.cards.find((card) => card.id === cardId);
-  },
+  }
 })); 

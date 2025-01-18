@@ -24,7 +24,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, index, columnId }) => {
     setIsEditing(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click from triggering
     if (window.confirm('Are you sure you want to delete this card?')) {
       deleteCard(columnId, card.id);
     }
@@ -51,28 +52,41 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, index, columnId }) => {
           {...provided.dragHandleProps}
           className={`${styles.card} ${snapshot.isDragging ? styles.dragging : ''} ${styles[`priority-${card.priority}`] || ''}`}
           style={provided.draggableProps.style}
+          onClick={handleEdit}
+          role="button"
+          tabIndex={0}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleEdit();
+            }
+          }}
         >
-          <h3 className={styles.title}>{card.title}</h3>
-          {card.description && (
-            <p className={styles.description}>{card.description}</p>
-          )}
-          <div className={styles.metadata}>
-            {card.labels && card.labels.length > 0 && (
-              <div className={styles.labels}>
-                {card.labels.map((label) => (
-                  <span key={label} className={styles.label}>
-                    {label}
-                  </span>
-                ))}
-              </div>
+          <div className={styles.cardContent}>
+            <h3 className={styles.title}>{card.title}</h3>
+            {card.description && (
+              <p className={styles.description}>{card.description}</p>
             )}
-            {card.priority && (
-              <span className={`${styles.priority} ${styles[`priority-${card.priority}`]}`}>
-                {card.priority}
-              </span>
-            )}
+            <div className={styles.metadata}>
+              {card.labels && card.labels.length > 0 && (
+                <div className={styles.labels}>
+                  {card.labels.map((label) => (
+                    <span key={label} className={styles.label}>
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {card.priority && (
+                <span className={`${styles.priority} ${styles[`priority-${card.priority}`]}`}>
+                  {card.priority}
+                </span>
+              )}
+            </div>
           </div>
-          <div className={styles.cardActions}>
+          <div 
+            className={styles.cardActions}
+            onClick={(e) => e.stopPropagation()} // Prevent card click from triggering when clicking actions
+          >
             <button
               onClick={handleEdit}
               className={styles.actionButton}

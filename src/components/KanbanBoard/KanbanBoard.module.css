@@ -10,6 +10,29 @@
 .columnWrapper {
   flex: 0 0 auto;
   min-width: 280px;
+  position: relative;
+}
+
+.columnDragHandle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 8px 8px 0 0;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.columnWrapper:hover .columnDragHandle {
+  opacity: 1;
+}
+
+.columnDragHandle.dragging {
+  cursor: grabbing;
+  opacity: 1;
 }
 
 .newColumn {

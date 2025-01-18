@@ -6,7 +6,7 @@ import { useBoardStore } from './store/boardStore';
 import styles from './App.module.css';
 
 const App: React.FC = () => {
-  const { columns, moveCard, addColumn } = useBoardStore();
+  const { columns, moveCard, addColumn, moveColumn } = useBoardStore();
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -40,6 +40,7 @@ const App: React.FC = () => {
         columns={columns}
         onDragEnd={handleDragEnd}
         onAddColumn={addColumn}
+        onMoveColumn={moveColumn}
       />
     </Layout>
   );
