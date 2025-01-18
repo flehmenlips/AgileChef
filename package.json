@@ -21,7 +21,7 @@
     "@types/react-dom": "^18.2.17",
     "@types/node": "^20.10.6",
     "@types/uuid": "^9.0.7",
-    "vite": "^5.0.8"
+    "vite": "^4.5.1"
   },
   "scripts": {
     "dev": "vite",
