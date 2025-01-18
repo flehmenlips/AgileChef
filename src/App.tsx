@@ -1,14 +1,39 @@
 import React from 'react';
-import Board from './components/Board';
+import { DropResult } from '@hello-pangea/dnd';
+import KanbanBoard from './components/KanbanBoard/KanbanBoard';
+import { useBoardStore } from './store/boardStore';
 import styles from './App.module.css';
 
 const App: React.FC = () => {
+  const { columns, moveCard, addColumn } = useBoardStore();
+
+  const handleDragEnd = (result: DropResult) => {
+    const { source, destination } = result;
+    
+    if (!destination) return;
+    
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+    
+    moveCard(
+      source.droppableId,
+      destination.droppableId,
+      source.index,
+      destination.index
+    );
+  };
+
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <h1>Agile Chef Kanban</h1>
-      </header>
-      <Board />
+    <div className={styles.app}>
+      <KanbanBoard
+        columns={columns}
+        onDragEnd={handleDragEnd}
+        onAddColumn={addColumn}
+      />
     </div>
   );
 };

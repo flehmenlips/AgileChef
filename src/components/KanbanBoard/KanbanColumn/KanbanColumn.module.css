@@ -4,7 +4,6 @@
   min-width: 280px;
   max-width: 280px;
   height: fit-content;
-  max-height: calc(100vh - 100px);
   display: flex;
   flex-direction: column;
 }
@@ -35,7 +34,6 @@
 .cardList {
   padding: 8px;
   flex-grow: 1;
-  overflow-y: auto;
 }
 
 .cardList::-webkit-scrollbar {

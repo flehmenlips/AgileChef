@@ -17,6 +17,7 @@ interface BoardState {
   columns: Column[];
   addCard: (columnId: string, title: string, description?: string) => void;
   moveCard: (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => void;
+  addColumn: (title: string) => void;
 }
 
 const initialColumns: Column[] = [
@@ -76,4 +77,15 @@ export const useBoardStore = create<BoardState>((set: SetState) => ({
       
       return { columns: newColumns };
     }),
+  addColumn: (title: string) =>
+    set((state) => ({
+      columns: [
+        ...state.columns,
+        {
+          id: uuid(),
+          title,
+          cards: [],
+        },
+      ],
+    })),
 })); 
