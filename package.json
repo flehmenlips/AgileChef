@@ -10,7 +10,9 @@
     "zustand": "^4.4.7",
     "vite": "^5.0.8",
     "@vitejs/plugin-react": "^4.2.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "uuid": "^9.0.1",
+    "@types/uuid": "^9.0.7"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
