@@ -13,12 +13,14 @@
     "serve": "^14.2.1",
     "@clerk/clerk-react": "^4.30.0",
     "react-router-dom": "^6.21.1",
-    "axios": "^1.6.2"
+    "axios": "^1.6.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@types/node": "^20.10.6",
+    "@types/uuid": "^9.0.7",
     "vite": "^5.0.8"
   },
   "scripts": {
