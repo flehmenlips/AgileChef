@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useUser, useClerk } from '@clerk/clerk-react';
 import styles from './Layout.module.css';
 
 interface LayoutProps {
@@ -6,7 +7,13 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  const handleSignOut = () => {
+    signOut();
+  };
 
   return (
     <div className={styles.layout}>
@@ -32,11 +39,28 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             ⚙️
           </button>
           <div className={styles.userProfile}>
-            <img 
-              src="https://via.placeholder.com/32" 
-              alt="User avatar" 
-              className={styles.avatar}
-            />
+            {user ? (
+              <>
+                <img 
+                  src={user.imageUrl || "https://via.placeholder.com/32"} 
+                  alt={`${user.firstName || 'User'}'s avatar`}
+                  className={styles.avatar}
+                />
+                <button 
+                  onClick={handleSignOut}
+                  className={styles.signOutButton}
+                  title="Sign out"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <img 
+                src="https://via.placeholder.com/32" 
+                alt="User avatar" 
+                className={styles.avatar}
+              />
+            )}
           </div>
         </div>
       </header>

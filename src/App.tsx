@@ -1,5 +1,6 @@
 import React from 'react';
 import { DropResult } from '@hello-pangea/dnd';
+import { SignIn, SignUp, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
 import Layout from './components/Layout/Layout';
 import KanbanBoard from './components/KanbanBoard/KanbanBoard';
 import { useBoardStore } from './store/boardStore';
@@ -29,20 +30,27 @@ const App: React.FC = () => {
   };
 
   return (
-    <Layout>
-      <div className={styles.pageHeader}>
-        <h2 className={styles.pageTitle}>Recipe Development Board</h2>
-        <p className={styles.pageDescription}>
-          Track and manage your recipe development process
-        </p>
-      </div>
-      <KanbanBoard
-        columns={columns}
-        onDragEnd={handleDragEnd}
-        onAddColumn={addColumn}
-        onMoveColumn={moveColumn}
-      />
-    </Layout>
+    <>
+      <SignedIn>
+        <Layout>
+          <div className={styles.pageHeader}>
+            <h2 className={styles.pageTitle}>Recipe Development Board</h2>
+            <p className={styles.pageDescription}>
+              Track and manage your recipe development process
+            </p>
+          </div>
+          <KanbanBoard
+            columns={columns}
+            onDragEnd={handleDragEnd}
+            onAddColumn={addColumn}
+            onMoveColumn={moveColumn}
+          />
+        </Layout>
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
+    </>
   );
 };
 
