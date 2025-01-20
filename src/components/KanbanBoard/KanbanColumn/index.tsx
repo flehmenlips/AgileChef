@@ -11,7 +11,7 @@ interface KanbanColumnProps {
   index: number;
 }
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, index }) => {
+const KanbanColumn: React.FC<KanbanColumnProps> = ({ column }) => {
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(column.title);
