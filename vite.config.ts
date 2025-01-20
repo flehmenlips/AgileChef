@@ -10,8 +10,25 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'dnd-vendor': ['@hello-pangea/dnd']
+        }
+      }
+    },
     commonjsOptions: {
-      include: []
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+      defaultIsModuleExports: true,
+      requireReturnsDefault: true
+    }
+  },
+  resolve: {
+    alias: {
+      'react': 'react',
+      'react-dom': 'react-dom'
     }
   }
 }); 
