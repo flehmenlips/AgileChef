@@ -1,6 +1,6 @@
 import React from 'react';
 import { DropResult } from '@hello-pangea/dnd';
-import { BrowserRouter, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
 import Layout from './components/Layout/Layout';
 import KanbanBoard from './components/KanbanBoard/KanbanBoard';
@@ -23,24 +23,13 @@ const AuthPage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const AppContent: React.FC = () => {
-  const { isSignedIn, isLoaded } = useAuth();
-  const navigate = useNavigate();
-
-  React.useEffect(() => {
-    console.log('Auth state changed:', { isSignedIn, isLoaded });
-    if (isLoaded && isSignedIn) {
-      console.log('User is authenticated, navigating to /');
-      navigate('/', { replace: true });
-    }
-  }, [isSignedIn, isLoaded]);
-
   return (
     <Routes>
       <Route 
         path="/sign-in" 
         element={
           <AuthPage>
-            <SignIn routing="path" path="/sign-in" afterSignInUrl="/" />
+            <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />
           </AuthPage>
         } 
       />
@@ -48,7 +37,7 @@ const AppContent: React.FC = () => {
         path="/sign-up" 
         element={
           <AuthPage>
-            <SignUp routing="path" path="/sign-up" afterSignUpUrl="/" />
+            <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
           </AuthPage>
         } 
       />
@@ -70,16 +59,13 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   console.log('ProtectedRoute state:', { isSignedIn, isLoaded });
 
   if (!isLoaded) {
-    console.log('Still loading auth state...');
     return <div>Loading...</div>;
   }
 
   if (!isSignedIn) {
-    console.log('User not signed in, redirecting to /sign-in');
     return <Navigate to="/sign-in" replace />;
   }
 
-  console.log('User is authenticated, rendering protected content');
   return <>{children}</>;
 };
 
