@@ -1,6 +1,6 @@
 import React from 'react';
 import { DropResult } from '@hello-pangea/dnd';
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
 import Layout from './components/Layout/Layout';
 import KanbanBoard from './components/KanbanBoard/KanbanBoard';
@@ -13,6 +13,7 @@ if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
 
 const AppContent: React.FC = () => {
   const { isSignedIn, isLoaded } = useAuth();
+  const navigate = useNavigate();
 
   if (!isLoaded) {
     return <div>Loading...</div>;
@@ -21,7 +22,7 @@ const AppContent: React.FC = () => {
   return (
     <Routes>
       <Route 
-        path="/sign-in" 
+        path="/sign-in/*" 
         element={
           isSignedIn ? (
             <Navigate to="/" replace />
@@ -36,7 +37,7 @@ const AppContent: React.FC = () => {
         } 
       />
       <Route 
-        path="/sign-up" 
+        path="/sign-up/*" 
         element={
           isSignedIn ? (
             <Navigate to="/" replace />
@@ -110,7 +111,9 @@ const KanbanBoardPage: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider 
+      publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
+    >
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>
