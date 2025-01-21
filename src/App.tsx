@@ -1,53 +1,70 @@
 import React from 'react';
 import { DropResult } from '@hello-pangea/dnd';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
-import { ClerkProvider, SignIn, SignUp, useAuth, RedirectToSignIn } from '@clerk/clerk-react';
+import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
 import Layout from './components/Layout/Layout';
 import KanbanBoard from './components/KanbanBoard/KanbanBoard';
 import { useBoardStore } from './store/boardStore';
 import styles from './App.module.css';
-import authStyles from './styles/auth.module.css';
 
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
   throw new Error('Missing Clerk Publishable Key');
 }
 
 const AppContent: React.FC = () => {
-  return (
-    <Routes>
-      <Route 
-        path="/sign-in" 
-        element={<SignIn routing="path" path="/sign-in" />} 
-      />
-      <Route 
-        path="/sign-up" 
-        element={<SignUp routing="path" path="/sign-up" />} 
-      />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <KanbanBoardPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
-};
-
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isSignedIn, isLoaded } = useAuth();
 
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
 
-  if (!isSignedIn) {
-    return <RedirectToSignIn />;
-  }
-
-  return <>{children}</>;
+  return (
+    <Routes>
+      <Route 
+        path="/sign-in" 
+        element={
+          isSignedIn ? (
+            <Navigate to="/" replace />
+          ) : (
+            <SignIn 
+              routing="path" 
+              path="/sign-in" 
+              afterSignInUrl="/"
+              signUpUrl="/sign-up"
+            />
+          )
+        } 
+      />
+      <Route 
+        path="/sign-up" 
+        element={
+          isSignedIn ? (
+            <Navigate to="/" replace />
+          ) : (
+            <SignUp 
+              routing="path" 
+              path="/sign-up"
+              afterSignUpUrl="/"
+              signInUrl="/sign-in"
+            />
+          )
+        } 
+      />
+      <Route
+        path="/"
+        element={
+          !isLoaded ? (
+            <div>Loading...</div>
+          ) : !isSignedIn ? (
+            <Navigate to="/sign-in" replace />
+          ) : (
+            <KanbanBoardPage />
+          )
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 };
 
 const KanbanBoardPage: React.FC = () => {
