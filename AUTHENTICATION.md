@@ -38,14 +38,10 @@ VITE_API_URL=your_clerk_backend_api_url  # Get this from Clerk Dashboard > API K
 
 ### 4. Additional Configuration
 
-#### Development URLs
-Make sure these URLs are added to your Clerk application's allowed URLs:
-- `http://localhost:3000`
-- `http://localhost:3000/sign-in`
-- `http://localhost:3000/sign-up`
+##
 
 #### Production URLs
-When deploying to production, add your production URLs to Clerk's allowed URLs list:
+When deploying to production, add your production URLs to Clerk's allowed URLs list in the "Paths" section of Clerk Dashboard:
 - `https://your-domain.com`
 - `https://your-domain.com/sign-in`
 - `https://your-domain.com/sign-up`

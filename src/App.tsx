@@ -12,11 +12,31 @@ if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
 }
 
 const AppContent: React.FC = () => {
+  const { isSignedIn } = useAuth();
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/sign-in" element={<SignIn routing="path" path="/sign-in" />} />
-        <Route path="/sign-up" element={<SignUp routing="path" path="/sign-up" />} />
+        <Route 
+          path="/sign-in" 
+          element={
+            isSignedIn ? (
+              <Navigate to="/" replace />
+            ) : (
+              <SignIn routing="path" path="/sign-in" />
+            )
+          } 
+        />
+        <Route 
+          path="/sign-up" 
+          element={
+            isSignedIn ? (
+              <Navigate to="/" replace />
+            ) : (
+              <SignUp routing="path" path="/sign-up" />
+            )
+          } 
+        />
         <Route
           path="/"
           element={
@@ -25,6 +45,7 @@ const AppContent: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
