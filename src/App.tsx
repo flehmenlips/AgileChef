@@ -23,39 +23,22 @@ const AuthPage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const AppContent: React.FC = () => {
-  const { isSignedIn, isLoaded } = useAuth();
-  const navigate = useNavigate();
-
-  React.useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      navigate('/', { replace: true });
-    }
-  }, [isLoaded, isSignedIn, navigate]);
-
   return (
     <Routes>
       <Route 
         path="/sign-in" 
         element={
-          isSignedIn ? (
-            <Navigate to="/" replace />
-          ) : (
-            <AuthPage>
-              <SignIn routing="path" path="/sign-in" />
-            </AuthPage>
-          )
+          <AuthPage>
+            <SignIn routing="path" path="/sign-in" redirectUrl="/" />
+          </AuthPage>
         } 
       />
       <Route 
         path="/sign-up" 
         element={
-          isSignedIn ? (
-            <Navigate to="/" replace />
-          ) : (
-            <AuthPage>
-              <SignUp routing="path" path="/sign-up" />
-            </AuthPage>
-          )
+          <AuthPage>
+            <SignUp routing="path" path="/sign-up" redirectUrl="/" />
+          </AuthPage>
         } 
       />
       <Route
@@ -73,19 +56,16 @@ const AppContent: React.FC = () => {
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isSignedIn, isLoaded } = useAuth();
-  const navigate = useNavigate();
-
-  React.useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      navigate('/sign-in', { replace: true });
-    }
-  }, [isLoaded, isSignedIn, navigate]);
 
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
 
-  return isSignedIn ? <>{children}</> : null;
+  if (!isSignedIn) {
+    return <Navigate to="/sign-in" replace />;
+  }
+
+  return <>{children}</>;
 };
 
 const KanbanBoardPage: React.FC = () => {
