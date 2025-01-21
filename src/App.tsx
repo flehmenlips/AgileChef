@@ -1,7 +1,7 @@
 import React from 'react';
 import { DropResult } from '@hello-pangea/dnd';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
-import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
+import { ClerkProvider, SignIn, SignUp, useAuth, RedirectToSignIn } from '@clerk/clerk-react';
 import Layout from './components/Layout/Layout';
 import KanbanBoard from './components/KanbanBoard/KanbanBoard';
 import { useBoardStore } from './store/boardStore';
@@ -12,34 +12,16 @@ if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
   throw new Error('Missing Clerk Publishable Key');
 }
 
-const AuthPage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <div className={authStyles.authContainer}>
-      <div className={authStyles.authWrapper}>
-        {children}
-      </div>
-    </div>
-  );
-};
-
 const AppContent: React.FC = () => {
   return (
     <Routes>
       <Route 
         path="/sign-in" 
-        element={
-          <AuthPage>
-            <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />
-          </AuthPage>
-        } 
+        element={<SignIn routing="path" path="/sign-in" />} 
       />
       <Route 
         path="/sign-up" 
-        element={
-          <AuthPage>
-            <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
-          </AuthPage>
-        } 
+        element={<SignUp routing="path" path="/sign-up" />} 
       />
       <Route
         path="/"
@@ -56,14 +38,13 @@ const AppContent: React.FC = () => {
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isSignedIn, isLoaded } = useAuth();
-  console.log('ProtectedRoute state:', { isSignedIn, isLoaded });
 
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
 
   if (!isSignedIn) {
-    return <Navigate to="/sign-in" replace />;
+    return <RedirectToSignIn />;
   }
 
   return <>{children}</>;
