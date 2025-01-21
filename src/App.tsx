@@ -1,68 +1,91 @@
 import React from 'react';
 import { DropResult } from '@hello-pangea/dnd';
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
 import Layout from './components/Layout/Layout';
 import KanbanBoard from './components/KanbanBoard/KanbanBoard';
 import { useBoardStore } from './store/boardStore';
 import styles from './App.module.css';
+import authStyles from './styles/auth.module.css';
 
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
   throw new Error('Missing Clerk Publishable Key');
 }
 
+const AuthPage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <div className={authStyles.authContainer}>
+      <div className={authStyles.authWrapper}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const AppContent: React.FC = () => {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      navigate('/', { replace: true });
+    }
+  }, [isLoaded, isSignedIn, navigate]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route 
-          path="/sign-in" 
-          element={
-            isSignedIn ? (
-              <Navigate to="/" replace />
-            ) : (
+    <Routes>
+      <Route 
+        path="/sign-in" 
+        element={
+          isSignedIn ? (
+            <Navigate to="/" replace />
+          ) : (
+            <AuthPage>
               <SignIn routing="path" path="/sign-in" />
-            )
-          } 
-        />
-        <Route 
-          path="/sign-up" 
-          element={
-            isSignedIn ? (
-              <Navigate to="/" replace />
-            ) : (
+            </AuthPage>
+          )
+        } 
+      />
+      <Route 
+        path="/sign-up" 
+        element={
+          isSignedIn ? (
+            <Navigate to="/" replace />
+          ) : (
+            <AuthPage>
               <SignUp routing="path" path="/sign-up" />
-            )
-          } 
-        />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <KanbanBoardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+            </AuthPage>
+          )
+        } 
+      />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <KanbanBoardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 };
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isSignedIn, isLoaded } = useAuth();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      navigate('/sign-in', { replace: true });
+    }
+  }, [isLoaded, isSignedIn, navigate]);
 
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
 
-  if (!isSignedIn) {
-    return <Navigate to="/sign-in" />;
-  }
-
-  return <>{children}</>;
+  return isSignedIn ? <>{children}</> : null;
 };
 
 const KanbanBoardPage: React.FC = () => {
@@ -109,7 +132,9 @@ const KanbanBoardPage: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
-      <AppContent />
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
     </ClerkProvider>
   );
 };
