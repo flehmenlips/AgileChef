@@ -7,6 +7,7 @@ const router = express.Router();
 
 // Create a new recipe card
 router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
+  console.log('Incoming request body:', req.body);
   const { title, description, columnId, order, color, ingredients, status, instructions, labels } = req.body as CreateCardRequest;
   try {
     // Verify column ownership through board
@@ -20,6 +21,7 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
     });
 
     if (!column) {
+      console.log('Column not found for columnId:', columnId);
       return res.status(404).json({ error: 'Column not found' });
     }
 
@@ -45,6 +47,7 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
         ingredients: true
       }
     });
+    console.log('Card created successfully:', card);
     res.json(card);
   } catch (error) {
     console.error('Error creating card:', error);
