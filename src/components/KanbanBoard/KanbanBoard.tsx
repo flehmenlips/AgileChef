@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { KanbanColumn as Column } from '../../types/kanban';
-import KanbanColumn from './KanbanColumn';
+import { KanbanColumn } from '../../types/kanban';
+import KanbanColumnComponent from './KanbanColumn';
 import styles from './KanbanBoard.module.css';
 
 interface KanbanBoardProps {
-  columns: Column[];
+  columns: KanbanColumn[];
   onDragEnd: (result: DropResult) => void;
   onAddColumn: (title: string) => void;
   onMoveColumn: (sourceIndex: number, destinationIndex: number) => void;
@@ -79,7 +79,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                         snapshot.isDragging ? styles.dragging : ''
                       }`}
                     />
-                    <KanbanColumn
+                    <KanbanColumnComponent
                       column={column}
                       index={index}
                     />

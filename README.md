@@ -10,7 +10,7 @@ A full-stack recipe and kitchen management application designed for professional
 - 🔄 Scaling & Conversion
 - 👥 User Management System
 - 📱 Responsive Dashboard
-- 🔒 Secure Authentication
+- 🔒 Secure Authentication with Clerk
 
 ## Tech Stack
 
@@ -20,6 +20,7 @@ A full-stack recipe and kitchen management application designed for professional
 - Tailwind CSS
 - React Query
 - React Router
+- Clerk Authentication
 - Chart.js
 
 ### Backend
@@ -36,6 +37,7 @@ A full-stack recipe and kitchen management application designed for professional
 - Node.js 18+
 - PostgreSQL 14+
 - pnpm (recommended) or npm
+- Clerk Account (for authentication)
 
 ### Installation
 
@@ -70,7 +72,14 @@ cd ../frontend
 cp .env.example .env
 ```
 
-4. Start development servers:
+4. Configure Clerk Authentication:
+   - Create a Clerk account and application
+   - In Clerk Dashboard, go to API Keys tab
+   - Click "Show API URLs" button to get your Backend API URL
+   - Update `.env` with your Clerk keys and Backend API URL
+   - See [Authentication Guide](AUTHENTICATION.md) for detailed setup
+
+5. Start development servers:
 ```bash
 # Start backend (from root directory)
 pnpm run dev:backend
@@ -83,7 +92,12 @@ pnpm run dev:frontend
 
 For detailed information about the development workflow, server management, and best practices, please see our [Development Guide](DEVELOPMENT.md).
 
-- Frontend runs on: `http://localhost:5173`
+### Important Documentation
+- [Authentication Setup](AUTHENTICATION.md) - Complete guide for setting up Clerk authentication
+- [Development Guide](DEVELOPMENT.md) - Development workflow and best practices
+
+### Development Servers
+- Frontend runs on: `http://localhost:3000`
 - Backend runs on: `http://localhost:3000`
 
 ## License
