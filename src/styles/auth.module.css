@@ -11,4 +11,17 @@
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
+}
+
+/* Override Clerk's default container styles */
+:global(.cl-card) {
+  width: 100% !important;
+  max-width: 500px !important;
+  margin: 0 auto !important;
+}
+
+:global(.cl-component) {
+  width: 100% !important;
+  max-width: 500px !important;
+  margin: 0 auto !important;
 } 

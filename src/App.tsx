@@ -6,10 +6,21 @@ import Layout from './components/Layout/Layout';
 import KanbanBoard from './components/KanbanBoard/KanbanBoard';
 import { useBoardStore } from './store/boardStore';
 import styles from './App.module.css';
+import authStyles from './styles/auth.module.css';
 
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
   throw new Error('Missing Clerk Publishable Key');
 }
+
+const AuthPage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <div className={authStyles.authContainer}>
+      <div className={authStyles.authWrapper}>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 const AppContent: React.FC = () => {
   const { isSignedIn, isLoaded } = useAuth();
@@ -27,12 +38,14 @@ const AppContent: React.FC = () => {
           isSignedIn ? (
             <Navigate to="/" replace />
           ) : (
-            <SignIn 
-              routing="path" 
-              path="/sign-in" 
-              afterSignInUrl="/"
-              signUpUrl="/sign-up"
-            />
+            <AuthPage>
+              <SignIn 
+                routing="path" 
+                path="/sign-in" 
+                afterSignInUrl="/"
+                signUpUrl="/sign-up"
+              />
+            </AuthPage>
           )
         } 
       />
@@ -42,12 +55,14 @@ const AppContent: React.FC = () => {
           isSignedIn ? (
             <Navigate to="/" replace />
           ) : (
-            <SignUp 
-              routing="path" 
-              path="/sign-up"
-              afterSignUpUrl="/"
-              signInUrl="/sign-in"
-            />
+            <AuthPage>
+              <SignUp 
+                routing="path" 
+                path="/sign-up"
+                afterSignUpUrl="/"
+                signInUrl="/sign-in"
+              />
+            </AuthPage>
           )
         } 
       />
