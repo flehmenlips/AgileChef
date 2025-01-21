@@ -46,6 +46,8 @@ model Card {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   title        String
+  description  String?
+  color        String?
   status       RecipeStatus @default(DORMANT)
   order        Int
   instructions String[]
