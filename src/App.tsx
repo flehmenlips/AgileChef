@@ -23,7 +23,7 @@ const AuthPage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const AppContent: React.FC = () => {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
   const navigate = useNavigate();
   const setToken = useBoardStore((state) => state.setToken);
 
@@ -31,16 +31,20 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     const setupAuth = async () => {
       if (isSignedIn) {
-        const { getToken } = useAuth();
-        const token = await getToken();
-        setToken(token);
+        try {
+          const token = await getToken();
+          setToken(token);
+        } catch (error) {
+          console.error('Failed to get auth token:', error);
+          setToken(null);
+        }
       } else {
         setToken(null);
       }
     };
     
     setupAuth();
-  }, [isSignedIn, setToken]);
+  }, [isSignedIn, setToken, getToken]);
 
   // Only log once when auth state changes
   useEffect(() => {
