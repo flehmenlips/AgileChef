@@ -40,6 +40,7 @@ const handleResponse = async (response: Response) => {
   const text = await response.text();
   console.log('Response status:', response.status);
   console.log('Response text:', text);
+  console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status} ${text}`);
@@ -50,6 +51,23 @@ const handleResponse = async (response: Response) => {
   } catch (e) {
     console.error('Failed to parse response JSON:', e);
     throw new Error('Invalid response from server');
+  }
+};
+
+// Helper function to make API requests
+const makeRequest = async (endpoint: string, options: RequestInit) => {
+  const url = `${API_URL}${endpoint}`;
+  console.log('Making API request:', { url, method: options.method });
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      credentials: 'include', // Include cookies if needed
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('API request failed:', error);
+    throw error;
   }
 };
 
@@ -147,13 +165,12 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       
       console.log('Sending payload to backend:', payload);
       
-      const response = await fetch(`${API_URL}/api/cards`, {
+      const newCard = await makeRequest('/card', {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify(payload),
       });
 
-      const newCard = await handleResponse(response);
       console.log('Card created on backend:', newCard);
 
       // Update local state
@@ -187,13 +204,12 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       const token = get().token;
       if (!token) throw new Error('No auth token available');
 
-      const response = await fetch(`${API_URL}/api/cards/${cardId}`, {
+      const updatedCard = await makeRequest(`/card/${cardId}`, {
         method: 'PUT',
         headers: getAuthHeaders(token),
         body: JSON.stringify(updates),
       });
 
-      const updatedCard = await handleResponse(response);
       console.log('Card updated on backend:', updatedCard);
 
       // Update local state
@@ -289,7 +305,7 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       set({ columns: newColumns });
 
       // Then update the backend
-      const response = await fetch(`${API_URL}/api/columns/${destColId}/cards`, {
+      await makeRequest(`/column/${destColId}/cards`, {
         method: 'PUT',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
@@ -301,7 +317,6 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
         }),
       });
 
-      await handleResponse(response);
       console.log('Card moved successfully:', movedCard);
     } catch (error) {
       console.error('Error moving card:', error);
