@@ -2,6 +2,7 @@ import express from 'express';
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
 import { prisma } from '../utils/prisma';
 import { CreateCardRequest, UpdateCardRequest } from '../types/api';
+import { randomUUID } from 'crypto';
 
 const router = express.Router();
 
@@ -34,20 +35,20 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
     const card = await prisma.card.create({
       data: {
         title,
-        description,
+        description: description || '',
         columnId,
-        order,
-        status,
+        order: order || 0,
+        status: status || 'DORMANT',
         instructions: instructions || [],
         labels: labels || [],
-        ingredients: {
+        ingredients: ingredients?.length ? {
           create: ingredients.map((ingredient) => ({
-            id: crypto.randomUUID(),
+            id: randomUUID(),
             name: ingredient.name,
-            quantity: ingredient.quantity,
+            quantity: ingredient.quantity || 0,
             unit: ingredient.unit
           }))
-        }
+        } : undefined
       },
       include: {
         ingredients: true
@@ -58,7 +59,13 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
     res.json(card);
   } catch (error) {
     console.error('Error creating card:', error);
-    res.status(500).json({ error: 'Failed to create card' });
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      if ('code' in error) {
+        console.error('Prisma error code:', (error as any).code);
+      }
+    }
+    res.status(500).json({ error: 'Failed to create card', details: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
