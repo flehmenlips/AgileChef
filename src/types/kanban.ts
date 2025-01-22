@@ -8,8 +8,26 @@ export interface KanbanColumn {
 export interface Ingredient {
   id: string;
   quantity: number;
-  unit: 'g' | 'oz' | 'cup' | 'tbsp' | 'tsp' | 'lb' | 'kg' | 'ml' | 'l' | 'piece' | 'pinch';
+  unit: Unit;
   name: string;
+}
+
+export enum Unit {
+  G = 'G',
+  KG = 'KG',
+  ML = 'ML',
+  L = 'L',
+  TSP = 'TSP',
+  TBSP = 'TBSP',
+  CUP = 'CUP',
+  PIECE = 'PIECE',
+  PINCH = 'PINCH'
+}
+
+export enum RecipeStatus {
+  DORMANT = 'DORMANT',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED'
 }
 
 export interface KanbanCard {
@@ -18,7 +36,7 @@ export interface KanbanCard {
   description?: string;
   ingredients: Ingredient[];
   instructions: string[];
-  status: 'fully-stocked' | 'low-stock' | 'out-of-stock' | 'in-progress' | 'dormant';
+  status: RecipeStatus;
   labels?: string[];
   assignees?: string[];
   createdAt: Date;

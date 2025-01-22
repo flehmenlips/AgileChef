@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
-import { KanbanCard, KanbanColumn, Ingredient } from '../types/kanban';
+import { KanbanCard, KanbanColumn, Ingredient, RecipeStatus } from '../types/kanban';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.agilechef.seabreeze.farm';
 
@@ -151,7 +151,7 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
         columnId,
         order: get().columns.find(col => col.id === columnId)?.cards.length || 0,
         ingredients: [], // Initialize with empty ingredients for now
-        status: 'dormant' as const, // Initial status
+        status: RecipeStatus.DORMANT, // Initial status
         instructions: [], // Initialize with empty instructions
         labels: [], // Initialize with empty labels
       };
