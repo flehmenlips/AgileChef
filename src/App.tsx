@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DropResult } from '@hello-pangea/dnd';
 import { BrowserRouter, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
@@ -23,8 +23,24 @@ const AuthPage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const AppContent: React.FC = () => {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, session } = useAuth();
   const navigate = useNavigate();
+
+  console.log('useAuth output:', { isSignedIn, isLoaded, session });
+
+  useEffect(() => {
+    if (session) {
+      console.log('Token:', session.idToken); // or session.accessToken
+    }
+  }, [session]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('useAuth output:', { isSignedIn, isLoaded, session });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isSignedIn, isLoaded, session]);
 
   if (!isLoaded) {
     return <div>Loading...</div>;
@@ -122,6 +138,18 @@ const KanbanBoardPage: React.FC = () => {
       />
     </Layout>
   );
+};
+
+const TokenLogger = () => {
+  const { session } = useAuth();
+
+  useEffect(() => {
+    if (session) {
+      console.log('Token:', session.idToken); // or session.accessToken
+    }
+  }, [session]);
+
+  return null;
 };
 
 const App: React.FC = () => {

@@ -7,10 +7,15 @@ const router = express.Router();
 
 // Create a new recipe card
 router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
+  console.log('=== Card Creation Attempt ===');
+  console.log('Request received at:', new Date().toISOString());
+  console.log('User ID:', req.auth.userId);
   console.log('Incoming request body:', req.body);
+  
   const { title, description, columnId, order, color, ingredients, status, instructions, labels } = req.body as CreateCardRequest;
   try {
     // Verify column ownership through board
+    console.log('Verifying column ownership for columnId:', columnId);
     const column = await prisma.column.findFirst({
       where: {
         id: columnId,
@@ -25,6 +30,7 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
       return res.status(404).json({ error: 'Column not found' });
     }
 
+    console.log('Column found, creating card...');
     const card = await prisma.card.create({
       data: {
         title,
@@ -47,6 +53,7 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
         ingredients: true
       }
     });
+    
     console.log('Card created successfully:', card);
     res.json(card);
   } catch (error) {
