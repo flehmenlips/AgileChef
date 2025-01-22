@@ -8,15 +8,18 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://api.agilechef.seabreeze
 interface BoardState {
   columns: Column[];
   token: string | null;
+  isLoading: boolean;
+  error: string | null;
   setToken: (token: string | null) => void;
+  fetchBoard: () => Promise<void>;
   addCard: (columnId: string, title: string, description?: string) => Promise<void>;
   updateCard: (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => Promise<void>;
   deleteCard: (columnId: string, cardId: string) => Promise<void>;
   moveCard: (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => Promise<void>;
-  addColumn: (title: string, limit?: number) => void;
-  updateColumn: (columnId: string, updates: Partial<Omit<Column, 'id' | 'cards'>>) => void;
-  deleteColumn: (columnId: string) => void;
-  moveColumn: (sourceIndex: number, destinationIndex: number) => void;
+  addColumn: (title: string, limit?: number) => Promise<void>;
+  updateColumn: (columnId: string, updates: Partial<Omit<Column, 'id' | 'cards'>>) => Promise<void>;
+  deleteColumn: (columnId: string) => Promise<void>;
+  moveColumn: (sourceIndex: number, destinationIndex: number) => Promise<void>;
   getCard: (columnId: string, cardId: string) => Card | undefined;
 }
 
@@ -71,81 +74,48 @@ const makeRequest = async (endpoint: string, options: RequestInit) => {
   }
 };
 
-const initialColumns: Column[] = [
-  {
-    id: 'todo',
-    title: 'To Do',
-    cards: [
-      { 
-        id: uuid(), 
-        title: 'Task 1', 
-        description: 'Description for task 1',
-        ingredients: [],
-        instructions: [],
-        status: 'dormant',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      { 
-        id: uuid(), 
-        title: 'Task 2', 
-        description: 'Description for task 2',
-        ingredients: [],
-        instructions: [],
-        status: 'dormant',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ],
-  },
-  {
-    id: 'inprogress',
-    title: 'In Progress',
-    cards: [
-      { 
-        id: uuid(), 
-        title: 'Task 3', 
-        description: 'Description for task 3',
-        ingredients: [],
-        instructions: [],
-        status: 'in-progress',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ],
-  },
-  {
-    id: 'done',
-    title: 'Done',
-    cards: [
-      { 
-        id: uuid(), 
-        title: 'Task 4', 
-        description: 'Description for task 4',
-        ingredients: [],
-        instructions: [],
-        status: 'fully-stocked',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ],
-  },
-];
-
 type SetState = (
   partial: BoardState | Partial<BoardState> | ((state: BoardState) => BoardState | Partial<BoardState>),
   replace?: boolean
 ) => void;
 
 export const useBoardStore = create<BoardState>((set: SetState, get) => ({
-  columns: initialColumns,
+  columns: [],
   token: null,
+  isLoading: false,
+  error: null,
   
   setToken: (token: string | null) => {
     console.log('Setting auth token:', token ? 'token present' : 'no token');
     set({ token });
+    if (token) {
+      // Fetch board data when token is set
+      get().fetchBoard();
+    }
   },
-  
+
+  fetchBoard: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const token = get().token;
+      if (!token) throw new Error('No auth token available');
+
+      const board = await makeRequest('/api/boards', {
+        method: 'GET',
+        headers: getAuthHeaders(token),
+      });
+
+      console.log('Fetched board data:', board);
+      set({ columns: board.columns || [], isLoading: false });
+    } catch (error) {
+      console.error('Error fetching board:', error);
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to fetch board',
+        isLoading: false 
+      });
+    }
+  },
+
   addCard: async (columnId: string, title: string, description?: string) => {
     console.log('Adding card:', { columnId, title, description });
     try {
@@ -323,9 +293,12 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
     }
   },
 
-  addColumn: (title: string, limit?: number) => {
+  addColumn: async (title: string, limit?: number) => {
     console.log('Adding column:', { title, limit });
-    set((state) => {
+    try {
+      const token = get().token;
+      if (!token) throw new Error('No auth token available');
+
       const newColumn = {
         id: uuid(),
         title,
@@ -333,13 +306,23 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
         limit,
       };
       console.log('Created new column:', newColumn);
-      return {
+
+      await makeRequest('/api/columns', {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify(newColumn),
+      });
+
+      set((state) => ({
         columns: [...state.columns, newColumn],
-      };
-    });
+      }));
+    } catch (error) {
+      console.error('Error adding column:', error);
+      throw error;
+    }
   },
 
-  updateColumn: (columnId: string, updates: Partial<Omit<Column, 'id' | 'cards'>>) =>
+  updateColumn: async (columnId: string, updates: Partial<Omit<Column, 'id' | 'cards'>>) =>
     set((state) => ({
       columns: state.columns.map((col) => {
         if (col.id === columnId) {
@@ -352,12 +335,12 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       }),
     })),
 
-  deleteColumn: (columnId: string) =>
+  deleteColumn: async (columnId: string) =>
     set((state) => ({
       columns: state.columns.filter((col) => col.id !== columnId),
     })),
 
-  moveColumn: (sourceIndex: number, destinationIndex: number) =>
+  moveColumn: async (sourceIndex: number, destinationIndex: number) =>
     set((state) => {
       const newColumns = [...state.columns];
       const [movedColumn] = newColumns.splice(sourceIndex, 1);
