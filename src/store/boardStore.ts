@@ -24,11 +24,16 @@ export type Card = KanbanCard;
 export type Column = KanbanColumn;
 
 // Helper function to get auth headers
-const getAuthHeaders = (token: string | null) => ({
-  'Authorization': token ? `Bearer ${token}` : '',
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-});
+const getAuthHeaders = (token: string | null) => {
+  if (!token) {
+    throw new Error('No auth token available');
+  }
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+};
 
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
@@ -118,11 +123,17 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
   columns: initialColumns,
   token: null,
   
-  setToken: (token: string | null) => set({ token }),
+  setToken: (token: string | null) => {
+    console.log('Setting auth token:', token ? 'token present' : 'no token');
+    set({ token });
+  },
   
   addCard: async (columnId: string, title: string, description?: string) => {
     console.log('Adding card:', { columnId, title, description });
     try {
+      const token = get().token;
+      if (!token) throw new Error('No auth token available');
+
       const payload = {
         title,
         description: description || '',
@@ -136,10 +147,9 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       
       console.log('Sending payload to backend:', payload);
       
-      const headers = getAuthHeaders(get().token);
-      const response = await fetch(`${API_URL}/cards`, {
+      const response = await fetch(`${API_URL}/api/cards`, {
         method: 'POST',
-        headers,
+        headers: getAuthHeaders(token),
         body: JSON.stringify(payload),
       });
 
@@ -174,10 +184,12 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
   updateCard: async (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => {
     console.log('Updating card:', { columnId, cardId, updates });
     try {
-      const headers = getAuthHeaders(get().token);
-      const response = await fetch(`${API_URL}/cards/${cardId}`, {
+      const token = get().token;
+      if (!token) throw new Error('No auth token available');
+
+      const response = await fetch(`${API_URL}/api/cards/${cardId}`, {
         method: 'PUT',
-        headers,
+        headers: getAuthHeaders(token),
         body: JSON.stringify(updates),
       });
 
@@ -215,10 +227,12 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
   deleteCard: async (columnId: string, cardId: string) => {
     console.log('Deleting card:', { columnId, cardId });
     try {
-      const headers = getAuthHeaders(get().token);
-      const response = await fetch(`${API_URL}/cards/${cardId}`, {
+      const token = get().token;
+      if (!token) throw new Error('No auth token available');
+
+      const response = await fetch(`${API_URL}/api/cards/${cardId}`, {
         method: 'DELETE',
-        headers,
+        headers: getAuthHeaders(token),
       });
 
       if (!response.ok) {
@@ -246,6 +260,9 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
   moveCard: async (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => {
     console.log('Moving card:', { sourceColId, destColId, sourceIndex, destIndex });
     try {
+      const token = get().token;
+      if (!token) throw new Error('No auth token available');
+
       const state = get();
       const sourceCol = state.columns.find((col) => col.id === sourceColId);
       const destCol = state.columns.find((col) => col.id === destColId);
@@ -272,10 +289,9 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       set({ columns: newColumns });
 
       // Then update the backend
-      const headers = getAuthHeaders(state.token);
-      const response = await fetch(`${API_URL}/columns/${destColId}/cards/reorder`, {
+      const response = await fetch(`${API_URL}/api/columns/${destColId}/cards`, {
         method: 'PUT',
-        headers,
+        headers: getAuthHeaders(token),
         body: JSON.stringify({
           cards: newDestCol.cards.map((card, index) => ({
             id: card.id,
