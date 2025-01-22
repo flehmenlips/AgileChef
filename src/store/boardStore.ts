@@ -88,7 +88,8 @@ type SetState = (
 export const useBoardStore = create<BoardState>((set: SetState, get) => ({
   columns: initialColumns,
   
-  addCard: (columnId: string, title: string, description?: string) => 
+  addCard: (columnId: string, title: string, description?: string) => {
+    console.log('Adding card:', { columnId, title, description });
     set((state) => ({
       columns: state.columns.map((col) => {
         if (col.id === columnId) {
@@ -99,6 +100,7 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
             createdAt: new Date(),
             updatedAt: new Date(),
           };
+          console.log('Created new card:', newCard);
           return {
             ...col,
             cards: [...col.cards, newCard],
@@ -106,9 +108,11 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
         }
         return col;
       }),
-    })),
+    }));
+  },
 
-  updateCard: (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) =>
+  updateCard: (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => {
+    console.log('Updating card:', { columnId, cardId, updates });
     set((state) => ({
       columns: state.columns.map((col) => {
         if (col.id === columnId) {
@@ -116,11 +120,13 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
             ...col,
             cards: col.cards.map((card) => {
               if (card.id === cardId) {
-                return {
+                const updatedCard = {
                   ...card,
                   ...updates,
                   updatedAt: new Date(),
                 };
+                console.log('Updated card:', updatedCard);
+                return updatedCard;
               }
               return card;
             }),
@@ -128,7 +134,8 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
         }
         return col;
       }),
-    })),
+    }));
+  },
 
   deleteCard: (columnId: string, cardId: string) =>
     set((state) => ({
@@ -143,32 +150,41 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       }),
     })),
 
-  moveCard: (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) =>
+  moveCard: (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => {
+    console.log('Moving card:', { sourceColId, destColId, sourceIndex, destIndex });
     set((state) => {
       const newColumns = [...state.columns];
       const sourceCol = newColumns.find((col) => col.id === sourceColId);
       const destCol = newColumns.find((col) => col.id === destColId);
       
-      if (!sourceCol || !destCol) return state;
+      if (!sourceCol || !destCol) {
+        console.error('Source or destination column not found:', { sourceColId, destColId });
+        return state;
+      }
       
       const [movedCard] = sourceCol.cards.splice(sourceIndex, 1);
       destCol.cards.splice(destIndex, 0, movedCard);
+      console.log('Card moved successfully:', movedCard);
       
       return { columns: newColumns };
-    }),
+    });
+  },
 
-  addColumn: (title: string, limit?: number) =>
-    set((state) => ({
-      columns: [
-        ...state.columns,
-        {
-          id: uuid(),
-          title,
-          cards: [],
-          limit,
-        },
-      ],
-    })),
+  addColumn: (title: string, limit?: number) => {
+    console.log('Adding column:', { title, limit });
+    set((state) => {
+      const newColumn = {
+        id: uuid(),
+        title,
+        cards: [],
+        limit,
+      };
+      console.log('Created new column:', newColumn);
+      return {
+        columns: [...state.columns, newColumn],
+      };
+    });
+  },
 
   updateColumn: (columnId: string, updates: Partial<Omit<Column, 'id' | 'cards'>>) =>
     set((state) => ({
