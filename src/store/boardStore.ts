@@ -46,6 +46,12 @@ const handleResponse = async (response: Response) => {
   console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
   if (!response.ok) {
+    if (response.status === 401) {
+      console.error('Authentication error - token may be invalid or expired');
+      // Clear the token and trigger a re-login
+      useBoardStore.getState().setToken(null);
+      throw new Error('Authentication failed - please sign in again');
+    }
     throw new Error(`API error: ${response.status} ${text}`);
   }
 
@@ -60,12 +66,19 @@ const handleResponse = async (response: Response) => {
 // Helper function to make API requests
 const makeRequest = async (endpoint: string, options: RequestInit) => {
   const url = `${API_URL}${endpoint}`;
-  console.log('Making API request:', { url, method: options.method });
+  const token = useBoardStore.getState().token;
+  
+  console.log('Making API request:', { 
+    url, 
+    method: options.method,
+    hasToken: !!token,
+    headers: options.headers
+  });
   
   try {
     const response = await fetch(url, {
       ...options,
-      credentials: 'include', // Include cookies if needed
+      credentials: 'include',
     });
     return await handleResponse(response);
   } catch (error) {
