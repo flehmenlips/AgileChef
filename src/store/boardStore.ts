@@ -306,16 +306,27 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       // Update the local state immediately
       set({ columns: newColumns });
 
-      // Then update the backend
-      await makeRequest(`/api/columns/${destColId}/cards/reorder`, {
+      // First update the card's column
+      await makeRequest(`/api/cards/${cardToMove.id}`, {
         method: 'PUT',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
-          cards: newDestCol.cards.map((card, index) => ({
-            id: card.id,
-            order: index,
-            columnId: destColId,
-          })),
+          columnId: destColId,
+          order: destIndex,
+        }),
+      });
+
+      // Then update the order of all cards in the destination column
+      const updatedCards = newDestCol.cards.map((card, index) => ({
+        id: card.id,
+        order: index,
+      }));
+
+      await makeRequest(`/api/columns/${destColId}/cards`, {
+        method: 'PUT',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          cards: updatedCards,
         }),
       });
 
