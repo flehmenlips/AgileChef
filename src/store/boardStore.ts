@@ -100,13 +100,36 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       const token = get().token;
       if (!token) throw new Error('No auth token available');
 
-      const board = await makeRequest('/api/boards', {
+      const boards = await makeRequest('/api/boards', {
         method: 'GET',
         headers: getAuthHeaders(token),
       });
 
-      console.log('Fetched board data:', board);
-      set({ columns: board.columns || [], isLoading: false });
+      console.log('Fetched boards:', boards);
+
+      // If no boards exist, create a default one
+      if (!boards || boards.length === 0) {
+        console.log('No boards found, creating default board');
+        const defaultBoard = await makeRequest('/api/boards', {
+          method: 'POST',
+          headers: getAuthHeaders(token),
+          body: JSON.stringify({
+            title: 'Recipe Development Board',
+            columns: [
+              { title: 'To Do', order: 0 },
+              { title: 'In Progress', order: 1 },
+              { title: 'Done', order: 2 }
+            ]
+          })
+        });
+        console.log('Created default board:', defaultBoard);
+        set({ columns: defaultBoard.columns || [], isLoading: false });
+      } else {
+        // Use the first board
+        const activeBoard = boards[0];
+        console.log('Using board:', activeBoard);
+        set({ columns: activeBoard.columns || [], isLoading: false });
+      }
     } catch (error) {
       console.error('Error fetching board:', error);
       set({ 
@@ -299,20 +322,32 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       const token = get().token;
       if (!token) throw new Error('No auth token available');
 
-      const newColumn = {
-        id: uuid(),
-        title,
-        cards: [],
-        limit,
-      };
-      console.log('Created new column:', newColumn);
-
-      await makeRequest('/api/columns', {
-        method: 'POST',
+      const boards = await makeRequest('/api/boards', {
+        method: 'GET',
         headers: getAuthHeaders(token),
-        body: JSON.stringify(newColumn),
       });
 
+      if (!boards || boards.length === 0) {
+        throw new Error('No board found');
+      }
+
+      const boardId = boards[0].id;
+      const order = get().columns.length;
+
+      const newColumn = await makeRequest('/api/columns', {
+        method: 'POST',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          title,
+          limit,
+          boardId,
+          order,
+        }),
+      });
+
+      console.log('Created new column:', newColumn);
+
+      // Update local state with the returned column
       set((state) => ({
         columns: [...state.columns, newColumn],
       }));
@@ -322,31 +357,83 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
     }
   },
 
-  updateColumn: async (columnId: string, updates: Partial<Omit<Column, 'id' | 'cards'>>) =>
-    set((state) => ({
-      columns: state.columns.map((col) => {
-        if (col.id === columnId) {
-          return {
-            ...col,
-            ...updates,
-          };
-        }
-        return col;
-      }),
-    })),
+  updateColumn: async (columnId: string, updates: Partial<Omit<Column, 'id' | 'cards'>>) => {
+    try {
+      const token = get().token;
+      if (!token) throw new Error('No auth token available');
 
-  deleteColumn: async (columnId: string) =>
-    set((state) => ({
-      columns: state.columns.filter((col) => col.id !== columnId),
-    })),
+      const updatedColumn = await makeRequest(`/api/columns/${columnId}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify(updates),
+      });
 
-  moveColumn: async (sourceIndex: number, destinationIndex: number) =>
-    set((state) => {
-      const newColumns = [...state.columns];
+      set((state) => ({
+        columns: state.columns.map((col) => {
+          if (col.id === columnId) {
+            return {
+              ...col,
+              ...updatedColumn,
+            };
+          }
+          return col;
+        }),
+      }));
+    } catch (error) {
+      console.error('Error updating column:', error);
+      throw error;
+    }
+  },
+
+  deleteColumn: async (columnId: string) => {
+    try {
+      const token = get().token;
+      if (!token) throw new Error('No auth token available');
+
+      await makeRequest(`/api/columns/${columnId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(token),
+      });
+
+      set((state) => ({
+        columns: state.columns.filter((col) => col.id !== columnId),
+      }));
+    } catch (error) {
+      console.error('Error deleting column:', error);
+      throw error;
+    }
+  },
+
+  moveColumn: async (sourceIndex: number, destinationIndex: number) => {
+    try {
+      const token = get().token;
+      if (!token) throw new Error('No auth token available');
+
+      const newColumns = [...get().columns];
       const [movedColumn] = newColumns.splice(sourceIndex, 1);
       newColumns.splice(destinationIndex, 0, movedColumn);
-      return { columns: newColumns };
-    }),
+
+      // Update the backend with new column order
+      await makeRequest('/api/boards/columns', {
+        method: 'PUT',
+        headers: getAuthHeaders(token),
+        body: JSON.stringify({
+          columns: newColumns.map((col, index) => ({
+            id: col.id,
+            order: index,
+          })),
+        }),
+      });
+
+      set({ columns: newColumns });
+    } catch (error) {
+      console.error('Error moving column:', error);
+      // Revert to previous state on error
+      const state = get();
+      set({ columns: state.columns });
+      throw error;
+    }
+  },
 
   getCard: (columnId: string, cardId: string) => {
     const state = get();
