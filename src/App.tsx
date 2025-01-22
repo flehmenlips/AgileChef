@@ -25,6 +25,22 @@ const AuthPage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const AppContent: React.FC = () => {
   const { isSignedIn, isLoaded } = useAuth();
   const navigate = useNavigate();
+  const setToken = useBoardStore((state) => state.setToken);
+
+  // Set up auth token
+  useEffect(() => {
+    const setupAuth = async () => {
+      if (isSignedIn) {
+        const { getToken } = useAuth();
+        const token = await getToken();
+        setToken(token);
+      } else {
+        setToken(null);
+      }
+    };
+    
+    setupAuth();
+  }, [isSignedIn, setToken]);
 
   // Only log once when auth state changes
   useEffect(() => {

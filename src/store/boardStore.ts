@@ -4,21 +4,31 @@ import { KanbanCard, KanbanColumn, Ingredient } from '../types/kanban';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export type Card = KanbanCard;
-export type Column = KanbanColumn;
-
+// Store interface
 interface BoardState {
   columns: Column[];
+  token: string | null;
+  setToken: (token: string | null) => void;
   addCard: (columnId: string, title: string, description?: string) => Promise<void>;
-  updateCard: (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => void;
-  deleteCard: (columnId: string, cardId: string) => void;
-  moveCard: (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => void;
+  updateCard: (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => Promise<void>;
+  deleteCard: (columnId: string, cardId: string) => Promise<void>;
+  moveCard: (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => Promise<void>;
   addColumn: (title: string, limit?: number) => void;
   updateColumn: (columnId: string, updates: Partial<Omit<Column, 'id' | 'cards'>>) => void;
   deleteColumn: (columnId: string) => void;
   moveColumn: (sourceIndex: number, destinationIndex: number) => void;
   getCard: (columnId: string, cardId: string) => Card | undefined;
 }
+
+export type Card = KanbanCard;
+export type Column = KanbanColumn;
+
+// Helper function to get auth headers
+const getAuthHeaders = (token: string | null) => ({
+  'Authorization': token ? `Bearer ${token}` : '',
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+});
 
 const initialColumns: Column[] = [
   {
@@ -88,6 +98,9 @@ type SetState = (
 
 export const useBoardStore = create<BoardState>((set: SetState, get) => ({
   columns: initialColumns,
+  token: null,
+  
+  setToken: (token: string | null) => set({ token }),
   
   addCard: async (columnId: string, title: string, description?: string) => {
     console.log('Adding card:', { columnId, title, description });
@@ -105,12 +118,10 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       
       console.log('Sending payload to backend:', payload);
       
-      const response = await fetch(`${API_URL}/card`, {
+      const headers = getAuthHeaders(get().token);
+      const response = await fetch(`${API_URL}/api/card`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -160,11 +171,10 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
   updateCard: async (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => {
     console.log('Updating card:', { columnId, cardId, updates });
     try {
-      const response = await fetch(`${API_URL}/card/${cardId}`, {
+      const headers = getAuthHeaders(get().token);
+      const response = await fetch(`${API_URL}/api/card/${cardId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(updates),
       });
 
@@ -203,18 +213,36 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
     }
   },
 
-  deleteCard: (columnId: string, cardId: string) =>
-    set((state) => ({
-      columns: state.columns.map((col) => {
-        if (col.id === columnId) {
-          return {
-            ...col,
-            cards: col.cards.filter((card) => card.id !== cardId),
-          };
-        }
-        return col;
-      }),
-    })),
+  deleteCard: async (columnId: string, cardId: string) => {
+    console.log('Deleting card:', { columnId, cardId });
+    try {
+      const headers = getAuthHeaders(get().token);
+      const response = await fetch(`${API_URL}/api/card/${cardId}`, {
+        method: 'DELETE',
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete card');
+      }
+
+      // Update local state
+      set((state) => ({
+        columns: state.columns.map((col) => {
+          if (col.id === columnId) {
+            return {
+              ...col,
+              cards: col.cards.filter((card) => card.id !== cardId),
+            };
+          }
+          return col;
+        }),
+      }));
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      throw error;
+    }
+  },
 
   moveCard: async (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => {
     console.log('Moving card:', { sourceColId, destColId, sourceIndex, destIndex });
@@ -245,11 +273,10 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       set({ columns: newColumns });
 
       // Then update the backend
-      const response = await fetch(`${API_URL}/column/${destColId}/cards`, {
+      const headers = getAuthHeaders(state.token);
+      const response = await fetch(`${API_URL}/api/column/${destColId}/cards`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           cards: newDestCol.cards.map((card, index) => ({
             id: card.id,
