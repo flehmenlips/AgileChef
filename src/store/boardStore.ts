@@ -4,6 +4,17 @@ import { KanbanCard, KanbanColumn, Ingredient, RecipeStatus } from '../types/kan
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.agilechef.seabreeze.farm';
 
+// Add type declaration for Clerk
+declare global {
+  interface Window {
+    Clerk?: {
+      session?: {
+        getToken: () => Promise<string | null>;
+      };
+    };
+  }
+}
+
 // Store interface
 interface BoardState {
   columns: Column[];
@@ -47,10 +58,30 @@ const handleResponse = async (response: Response) => {
 
   if (!response.ok) {
     if (response.status === 401) {
-      console.error('Authentication error - token may be invalid or expired');
-      // Clear the token and trigger a re-login
-      useBoardStore.getState().setToken(null);
-      throw new Error('Authentication failed - please sign in again');
+      console.error('Authentication error - attempting to refresh session');
+      // Instead of immediately clearing the token, try to refresh the session
+      try {
+        // Attempt to get a new token from Clerk
+        const token = await window.Clerk?.session?.getToken?.() || null;
+        if (token) {
+          console.log('Successfully refreshed token');
+          useBoardStore.getState().setToken(token);
+          // Retry the original request with the new token
+          const retryResponse = await fetch(response.url, {
+            ...response,
+            headers: {
+              ...response.headers,
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          return handleResponse(retryResponse);
+        }
+      } catch (refreshError) {
+        console.error('Failed to refresh token:', refreshError);
+        // Only clear token if refresh fails
+        useBoardStore.getState().setToken(null);
+        throw new Error('Authentication failed - please sign in again');
+      }
     }
     throw new Error(`API error: ${response.status} ${text}`);
   }
@@ -67,6 +98,22 @@ const handleResponse = async (response: Response) => {
 const makeRequest = async (endpoint: string, options: RequestInit) => {
   const url = `${API_URL}${endpoint}`;
   const token = useBoardStore.getState().token;
+  
+  if (!token) {
+    try {
+      // Try to get a fresh token from Clerk if none exists
+      const newToken = await window.Clerk?.session?.getToken?.() || null;
+      if (newToken) {
+        console.log('Retrieved fresh token');
+        useBoardStore.getState().setToken(newToken);
+      } else {
+        throw new Error('No auth token available and unable to refresh');
+      }
+    } catch (error) {
+      console.error('Failed to get fresh token:', error);
+      throw new Error('No auth token available');
+    }
+  }
   
   console.log('Making API request:', { 
     url, 
