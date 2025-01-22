@@ -20,6 +20,11 @@ export interface CreateColumnRequest {
   limit?: number;
 }
 
+export interface UpdateColumnRequest {
+  title?: string;
+  limit?: number;
+}
+
 export interface UpdateCardOrderRequest {
   cards: {
     id: string;

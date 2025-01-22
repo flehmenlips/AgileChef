@@ -106,4 +106,39 @@ router.delete('/:columnId', ClerkExpressRequireAuth(), async (req, res) => {
   }
 });
 
+// Update a column
+router.put('/:columnId', ClerkExpressRequireAuth(), async (req, res) => {
+  const { columnId } = req.params;
+  const { title, limit } = req.body;
+  
+  try {
+    // Verify column ownership through board
+    const column = await prisma.column.findFirst({
+      where: {
+        id: columnId,
+        board: {
+          userId: req.auth.userId
+        }
+      }
+    });
+
+    if (!column) {
+      return res.status(404).json({ error: 'Column not found' });
+    }
+
+    const updatedColumn = await prisma.column.update({
+      where: { id: columnId },
+      data: {
+        ...(title && { title }),
+        ...(typeof limit === 'number' && { limit })
+      }
+    });
+
+    res.json(updatedColumn);
+  } catch (error) {
+    console.error('Error updating column:', error);
+    res.status(500).json({ error: 'Failed to update column' });
+  }
+});
+
 export default router; 
