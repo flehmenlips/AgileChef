@@ -49,6 +49,8 @@ export interface UpdateCardRequest {
   instructions?: string[];
   labels?: string[];
   ingredients?: CreateIngredientRequest[];
+  columnId?: string;
+  order?: number;
 }
 
 // Ingredient types

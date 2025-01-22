@@ -72,7 +72,7 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
 // Update a recipe card
 router.put('/:cardId', ClerkExpressRequireAuth(), async (req, res) => {
   const { cardId } = req.params;
-  const { title, description, status, instructions, labels, ingredients } = req.body as UpdateCardRequest;
+  const { title, description, status, instructions, labels, ingredients, columnId, order } = req.body as UpdateCardRequest;
   
   try {
     // Verify card ownership through board
@@ -107,6 +107,8 @@ router.put('/:cardId', ClerkExpressRequireAuth(), async (req, res) => {
         ...(status && { status }),
         ...(instructions && { instructions }),
         ...(labels && { labels }),
+        ...(columnId && { columnId }),
+        ...(typeof order === 'number' && { order }),
         ...(ingredients && {
           ingredients: {
             create: ingredients.map((ingredient) => ({
