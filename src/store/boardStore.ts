@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
 import { KanbanCard, KanbanColumn, Ingredient } from '../types/kanban';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.agilechef.seabreeze.farm';
 
 // Store interface
 interface BoardState {
@@ -29,6 +29,24 @@ const getAuthHeaders = (token: string | null) => ({
   'Content-Type': 'application/json',
   'Accept': 'application/json',
 });
+
+// Helper function to handle API responses
+const handleResponse = async (response: Response) => {
+  const text = await response.text();
+  console.log('Response status:', response.status);
+  console.log('Response text:', text);
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${text}`);
+  }
+
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch (e) {
+    console.error('Failed to parse response JSON:', e);
+    throw new Error('Invalid response from server');
+  }
+};
 
 const initialColumns: Column[] = [
   {
@@ -119,28 +137,13 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       console.log('Sending payload to backend:', payload);
       
       const headers = getAuthHeaders(get().token);
-      const response = await fetch(`${API_URL}/api/card`, {
+      const response = await fetch(`${API_URL}/cards`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
       });
 
-      console.log('Response status:', response.status);
-      const responseText = await response.text();
-      console.log('Response text:', responseText);
-
-      if (!response.ok) {
-        throw new Error(`Failed to create card: ${response.status} ${responseText}`);
-      }
-
-      let newCard;
-      try {
-        newCard = JSON.parse(responseText);
-      } catch (e) {
-        console.error('Failed to parse response JSON:', e);
-        throw new Error('Invalid response from server');
-      }
-
+      const newCard = await handleResponse(response);
       console.log('Card created on backend:', newCard);
 
       // Update local state
@@ -172,17 +175,13 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
     console.log('Updating card:', { columnId, cardId, updates });
     try {
       const headers = getAuthHeaders(get().token);
-      const response = await fetch(`${API_URL}/api/card/${cardId}`, {
+      const response = await fetch(`${API_URL}/cards/${cardId}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(updates),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update card');
-      }
-
-      const updatedCard = await response.json();
+      const updatedCard = await handleResponse(response);
       console.log('Card updated on backend:', updatedCard);
 
       // Update local state
@@ -217,7 +216,7 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
     console.log('Deleting card:', { columnId, cardId });
     try {
       const headers = getAuthHeaders(get().token);
-      const response = await fetch(`${API_URL}/api/card/${cardId}`, {
+      const response = await fetch(`${API_URL}/cards/${cardId}`, {
         method: 'DELETE',
         headers,
       });
@@ -274,7 +273,7 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
 
       // Then update the backend
       const headers = getAuthHeaders(state.token);
-      const response = await fetch(`${API_URL}/api/column/${destColId}/cards`, {
+      const response = await fetch(`${API_URL}/columns/${destColId}/cards/reorder`, {
         method: 'PUT',
         headers,
         body: JSON.stringify({
@@ -286,16 +285,13 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
         }),
       });
 
-      if (!response.ok) {
-        // If the backend update fails, revert the local state
-        console.error('Failed to update card order on backend');
-        set({ columns: state.columns });
-        throw new Error('Failed to move card');
-      }
-
+      await handleResponse(response);
       console.log('Card moved successfully:', movedCard);
     } catch (error) {
       console.error('Error moving card:', error);
+      // Revert local state on error
+      const state = get();
+      set({ columns: state.columns });
       throw error;
     }
   },
