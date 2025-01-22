@@ -165,7 +165,7 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       
       console.log('Sending payload to backend:', payload);
       
-      const newCard = await makeRequest('/card', {
+      const newCard = await makeRequest('/api/cards', {
         method: 'POST',
         headers: getAuthHeaders(token),
         body: JSON.stringify(payload),
@@ -204,7 +204,7 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       const token = get().token;
       if (!token) throw new Error('No auth token available');
 
-      const updatedCard = await makeRequest(`/card/${cardId}`, {
+      const updatedCard = await makeRequest(`/api/cards/${cardId}`, {
         method: 'PUT',
         headers: getAuthHeaders(token),
         body: JSON.stringify(updates),
@@ -246,14 +246,10 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       const token = get().token;
       if (!token) throw new Error('No auth token available');
 
-      const response = await fetch(`${API_URL}/api/cards/${cardId}`, {
+      await makeRequest(`/api/cards/${cardId}`, {
         method: 'DELETE',
         headers: getAuthHeaders(token),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete card');
-      }
 
       // Update local state
       set((state) => ({
@@ -305,7 +301,7 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       set({ columns: newColumns });
 
       // Then update the backend
-      await makeRequest(`/column/${destColId}/cards`, {
+      await makeRequest(`/api/columns/${destColId}/cards/reorder`, {
         method: 'PUT',
         headers: getAuthHeaders(token),
         body: JSON.stringify({
