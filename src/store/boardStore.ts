@@ -90,29 +90,44 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
   addCard: async (columnId: string, title: string, description?: string) => {
     console.log('Adding card:', { columnId, title, description });
     try {
-      // Call the backend API
+      const payload = {
+        title,
+        description: description || '',
+        columnId,
+        order: get().columns.find(col => col.id === columnId)?.cards.length || 0,
+        ingredients: [], // Initialize with empty ingredients for now
+        status: 'dormant' as const, // Initial status
+        instructions: [], // Initialize with empty instructions
+        labels: [], // Initialize with empty labels
+      };
+      
+      console.log('Sending payload to backend:', payload);
+      
       const response = await fetch('/api/card', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: JSON.stringify({
-          title,
-          description,
-          columnId,
-          order: get().columns.find(col => col.id === columnId)?.cards.length || 0,
-          ingredients: [], // Initialize with empty ingredients for now
-          status: 'active',
-          instructions: [], // Initialize with empty instructions
-          labels: [], // Initialize with empty labels
-        }),
+        body: JSON.stringify(payload),
       });
 
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+
       if (!response.ok) {
-        throw new Error('Failed to create card');
+        throw new Error(`Failed to create card: ${response.status} ${responseText}`);
       }
 
-      const newCard = await response.json();
+      let newCard;
+      try {
+        newCard = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse response JSON:', e);
+        throw new Error('Invalid response from server');
+      }
+
       console.log('Card created on backend:', newCard);
 
       // Update local state
@@ -122,13 +137,9 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
             return {
               ...col,
               cards: [...col.cards, {
-                id: newCard.id,
-                title: newCard.title,
-                description: newCard.description,
+                ...newCard,
                 createdAt: new Date(newCard.createdAt),
                 updatedAt: new Date(newCard.updatedAt),
-                labels: newCard.labels,
-                priority: newCard.priority,
               }],
             };
           }
@@ -137,34 +148,57 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       }));
     } catch (error) {
       console.error('Error adding card:', error);
-      // You might want to show an error notification to the user here
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
+      throw error; // Re-throw to handle in the UI
     }
   },
 
-  updateCard: (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => {
+  updateCard: async (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => {
     console.log('Updating card:', { columnId, cardId, updates });
-    set((state) => ({
-      columns: state.columns.map((col) => {
-        if (col.id === columnId) {
-          return {
-            ...col,
-            cards: col.cards.map((card) => {
-              if (card.id === cardId) {
-                const updatedCard = {
-                  ...card,
-                  ...updates,
-                  updatedAt: new Date(),
-                };
-                console.log('Updated card:', updatedCard);
-                return updatedCard;
-              }
-              return card;
-            }),
-          };
-        }
-        return col;
-      }),
-    }));
+    try {
+      const response = await fetch(`/api/card/${cardId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update card');
+      }
+
+      const updatedCard = await response.json();
+      console.log('Card updated on backend:', updatedCard);
+
+      // Update local state
+      set((state) => ({
+        columns: state.columns.map((col) => {
+          if (col.id === columnId) {
+            return {
+              ...col,
+              cards: col.cards.map((card) => {
+                if (card.id === cardId) {
+                  return {
+                    ...card,
+                    ...updatedCard,
+                    createdAt: new Date(updatedCard.createdAt),
+                    updatedAt: new Date(updatedCard.updatedAt),
+                  };
+                }
+                return card;
+              }),
+            };
+          }
+          return col;
+        }),
+      }));
+    } catch (error) {
+      console.error('Error updating card:', error);
+      throw error;
+    }
   },
 
   deleteCard: (columnId: string, cardId: string) =>
@@ -180,24 +214,61 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       }),
     })),
 
-  moveCard: (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => {
+  moveCard: async (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => {
     console.log('Moving card:', { sourceColId, destColId, sourceIndex, destIndex });
-    set((state) => {
-      const newColumns = [...state.columns];
-      const sourceCol = newColumns.find((col) => col.id === sourceColId);
-      const destCol = newColumns.find((col) => col.id === destColId);
+    try {
+      const state = get();
+      const sourceCol = state.columns.find((col) => col.id === sourceColId);
+      const destCol = state.columns.find((col) => col.id === destColId);
       
       if (!sourceCol || !destCol) {
         console.error('Source or destination column not found:', { sourceColId, destColId });
-        return state;
+        return;
       }
-      
-      const [movedCard] = sourceCol.cards.splice(sourceIndex, 1);
-      destCol.cards.splice(destIndex, 0, movedCard);
+
+      const cardToMove = sourceCol.cards[sourceIndex];
+      if (!cardToMove) {
+        console.error('Card not found at source index:', sourceIndex);
+        return;
+      }
+
+      // Optimistically update the local state
+      const newColumns = [...state.columns];
+      const newSourceCol = newColumns.find((col) => col.id === sourceColId)!;
+      const newDestCol = newColumns.find((col) => col.id === destColId)!;
+      const [movedCard] = newSourceCol.cards.splice(sourceIndex, 1);
+      newDestCol.cards.splice(destIndex, 0, movedCard);
+
+      // Update the local state immediately
+      set({ columns: newColumns });
+
+      // Then update the backend
+      const response = await fetch(`/api/column/${destColId}/cards`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cards: newDestCol.cards.map((card, index) => ({
+            id: card.id,
+            order: index,
+            columnId: destColId,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        // If the backend update fails, revert the local state
+        console.error('Failed to update card order on backend');
+        set({ columns: state.columns });
+        throw new Error('Failed to move card');
+      }
+
       console.log('Card moved successfully:', movedCard);
-      
-      return { columns: newColumns };
-    });
+    } catch (error) {
+      console.error('Error moving card:', error);
+      throw error;
+    }
   },
 
   addColumn: (title: string, limit?: number) => {
