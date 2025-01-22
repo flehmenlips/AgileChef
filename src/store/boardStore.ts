@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
 import { KanbanCard, KanbanColumn, Ingredient } from '../types/kanban';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export type Card = KanbanCard;
 export type Column = KanbanColumn;
 
@@ -103,7 +105,7 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       
       console.log('Sending payload to backend:', payload);
       
-      const response = await fetch('/api/card', {
+      const response = await fetch(`${API_URL}/card`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -151,14 +153,14 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       if (error instanceof Error) {
         console.error('Error details:', error.message);
       }
-      throw error; // Re-throw to handle in the UI
+      throw error;
     }
   },
 
   updateCard: async (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => {
     console.log('Updating card:', { columnId, cardId, updates });
     try {
-      const response = await fetch(`/api/card/${cardId}`, {
+      const response = await fetch(`${API_URL}/card/${cardId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -243,7 +245,7 @@ export const useBoardStore = create<BoardState>((set: SetState, get) => ({
       set({ columns: newColumns });
 
       // Then update the backend
-      const response = await fetch(`/api/column/${destColId}/cards`, {
+      const response = await fetch(`${API_URL}/column/${destColId}/cards`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
