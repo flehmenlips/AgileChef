@@ -1,26 +1,13 @@
 import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
+import { KanbanCard, KanbanColumn, Ingredient } from '../types/kanban';
 
-export interface Card {
-  id: string;
-  title: string;
-  description?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  labels?: string[];
-  priority?: 'low' | 'medium' | 'high';
-}
-
-export interface Column {
-  id: string;
-  title: string;
-  cards: Card[];
-  limit?: number;
-}
+export type Card = KanbanCard;
+export type Column = KanbanColumn;
 
 interface BoardState {
   columns: Column[];
-  addCard: (columnId: string, title: string, description?: string) => void;
+  addCard: (columnId: string, title: string, description?: string) => Promise<void>;
   updateCard: (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => void;
   deleteCard: (columnId: string, cardId: string) => void;
   moveCard: (sourceColId: string, destColId: string, sourceIndex: number, destIndex: number) => void;
@@ -40,6 +27,9 @@ const initialColumns: Column[] = [
         id: uuid(), 
         title: 'Task 1', 
         description: 'Description for task 1',
+        ingredients: [],
+        instructions: [],
+        status: 'dormant',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -47,6 +37,9 @@ const initialColumns: Column[] = [
         id: uuid(), 
         title: 'Task 2', 
         description: 'Description for task 2',
+        ingredients: [],
+        instructions: [],
+        status: 'dormant',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -60,6 +53,9 @@ const initialColumns: Column[] = [
         id: uuid(), 
         title: 'Task 3', 
         description: 'Description for task 3',
+        ingredients: [],
+        instructions: [],
+        status: 'in-progress',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -73,6 +69,9 @@ const initialColumns: Column[] = [
         id: uuid(), 
         title: 'Task 4', 
         description: 'Description for task 4',
+        ingredients: [],
+        instructions: [],
+        status: 'fully-stocked',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -88,27 +87,58 @@ type SetState = (
 export const useBoardStore = create<BoardState>((set: SetState, get) => ({
   columns: initialColumns,
   
-  addCard: (columnId: string, title: string, description?: string) => {
+  addCard: async (columnId: string, title: string, description?: string) => {
     console.log('Adding card:', { columnId, title, description });
-    set((state) => ({
-      columns: state.columns.map((col) => {
-        if (col.id === columnId) {
-          const newCard: Card = {
-            id: uuid(),
-            title,
-            description,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          console.log('Created new card:', newCard);
-          return {
-            ...col,
-            cards: [...col.cards, newCard],
-          };
-        }
-        return col;
-      }),
-    }));
+    try {
+      // Call the backend API
+      const response = await fetch('/api/card', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          columnId,
+          order: get().columns.find(col => col.id === columnId)?.cards.length || 0,
+          ingredients: [], // Initialize with empty ingredients for now
+          status: 'active',
+          instructions: [], // Initialize with empty instructions
+          labels: [], // Initialize with empty labels
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create card');
+      }
+
+      const newCard = await response.json();
+      console.log('Card created on backend:', newCard);
+
+      // Update local state
+      set((state) => ({
+        columns: state.columns.map((col) => {
+          if (col.id === columnId) {
+            return {
+              ...col,
+              cards: [...col.cards, {
+                id: newCard.id,
+                title: newCard.title,
+                description: newCard.description,
+                createdAt: new Date(newCard.createdAt),
+                updatedAt: new Date(newCard.updatedAt),
+                labels: newCard.labels,
+                priority: newCard.priority,
+              }],
+            };
+          }
+          return col;
+        }),
+      }));
+    } catch (error) {
+      console.error('Error adding card:', error);
+      // You might want to show an error notification to the user here
+    }
   },
 
   updateCard: (columnId: string, cardId: string, updates: Partial<Omit<Card, 'id' | 'createdAt'>>) => {

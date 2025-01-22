@@ -15,6 +15,7 @@ export interface Ingredient {
 export interface KanbanCard {
   id: string;
   title: string;
+  description?: string;
   ingredients: Ingredient[];
   instructions: string[];
   status: 'fully-stocked' | 'low-stock' | 'out-of-stock' | 'in-progress' | 'dormant';

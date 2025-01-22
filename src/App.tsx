@@ -23,24 +23,15 @@ const AuthPage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const AppContent: React.FC = () => {
-  const { isSignedIn, isLoaded, session } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const navigate = useNavigate();
 
-  console.log('useAuth output:', { isSignedIn, isLoaded, session });
-
+  // Only log once when auth state changes
   useEffect(() => {
-    if (session) {
-      console.log('Token:', session.idToken); // or session.accessToken
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Auth state changed:', { isSignedIn, isLoaded });
     }
-  }, [session]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('useAuth output:', { isSignedIn, isLoaded, session });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isSignedIn, isLoaded, session]);
+  }, [isSignedIn, isLoaded]);
 
   if (!isLoaded) {
     return <div>Loading...</div>;
@@ -138,18 +129,6 @@ const KanbanBoardPage: React.FC = () => {
       />
     </Layout>
   );
-};
-
-const TokenLogger = () => {
-  const { session } = useAuth();
-
-  useEffect(() => {
-    if (session) {
-      console.log('Token:', session.idToken); // or session.accessToken
-    }
-  }, [session]);
-
-  return null;
 };
 
 const App: React.FC = () => {
