@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KanbanCard, Ingredient } from '../../../types/kanban';
+import { KanbanCard, Ingredient, RecipeStatus, Unit } from '../../../types/kanban';
 import styles from './RecipeCardModal.module.css';
 
 interface RecipeCardModalProps {
@@ -12,10 +12,10 @@ const RecipeCardModal: React.FC<RecipeCardModalProps> = ({ card, onSubmit, onClo
   const [title, setTitle] = useState(card.title);
   const [ingredients, setIngredients] = useState<Ingredient[]>(card.ingredients || []);
   const [instructions, setInstructions] = useState<string[]>(card.instructions || []);
-  const [status, setStatus] = useState(card.status || 'dormant');
-  const [newIngredient, setNewIngredient] = useState<{ quantity: number; unit: Ingredient['unit']; name: string }>({
+  const [status, setStatus] = useState<RecipeStatus>(card.status || RecipeStatus.DORMANT);
+  const [newIngredient, setNewIngredient] = useState<{ quantity: number; unit: Unit; name: string }>({
     quantity: 0,
-    unit: 'g',
+    unit: Unit.G,
     name: '',
   });
   const [newInstruction, setNewInstruction] = useState('');
@@ -33,7 +33,7 @@ const RecipeCardModal: React.FC<RecipeCardModalProps> = ({ card, onSubmit, onClo
   const addIngredient = () => {
     if (newIngredient.name && newIngredient.quantity > 0) {
       setIngredients([...ingredients, { ...newIngredient, id: crypto.randomUUID() }]);
-      setNewIngredient({ quantity: 0, unit: 'g', name: '' });
+      setNewIngredient({ quantity: 0, unit: Unit.G, name: '' });
     }
   };
 
@@ -69,6 +69,7 @@ const RecipeCardModal: React.FC<RecipeCardModalProps> = ({ card, onSubmit, onClo
               onChange={(e) => setTitle(e.target.value)}
               className={styles.input}
               placeholder="Recipe title"
+              required
             />
           </div>
 
@@ -76,14 +77,12 @@ const RecipeCardModal: React.FC<RecipeCardModalProps> = ({ card, onSubmit, onClo
             <label className={styles.label}>Status</label>
             <select
               value={status}
-              onChange={(e) => setStatus(e.target.value as KanbanCard['status'])}
+              onChange={(e) => setStatus(e.target.value as RecipeStatus)}
               className={styles.select}
             >
-              <option value="fully-stocked">Fully Stocked</option>
-              <option value="low-stock">Low Stock</option>
-              <option value="out-of-stock">Out of Stock</option>
-              <option value="in-progress">In Progress</option>
-              <option value="dormant">Dormant</option>
+              <option value={RecipeStatus.DORMANT}>Dormant</option>
+              <option value={RecipeStatus.ACTIVE}>Active</option>
+              <option value={RecipeStatus.COMPLETED}>Completed</option>
             </select>
           </div>
 
@@ -101,74 +100,70 @@ const RecipeCardModal: React.FC<RecipeCardModalProps> = ({ card, onSubmit, onClo
               />
               <select
                 value={newIngredient.unit}
-                onChange={(e) => setNewIngredient({ ...newIngredient, unit: e.target.value as Ingredient['unit'] })}
+                onChange={(e) => setNewIngredient({ ...newIngredient, unit: e.target.value as Unit })}
                 className={styles.unitSelect}
               >
-                <option value="g">grams</option>
-                <option value="oz">ounces</option>
-                <option value="cup">cups</option>
-                <option value="tbsp">tablespoons</option>
-                <option value="tsp">teaspoons</option>
-                <option value="lb">pounds</option>
-                <option value="kg">kilograms</option>
-                <option value="ml">milliliters</option>
-                <option value="l">liters</option>
-                <option value="piece">pieces</option>
-                <option value="pinch">pinches</option>
+                {Object.values(Unit).map((unit) => (
+                  <option key={unit} value={unit}>
+                    {unit}
+                  </option>
+                ))}
               </select>
               <input
                 type="text"
                 value={newIngredient.name}
                 onChange={(e) => setNewIngredient({ ...newIngredient, name: e.target.value })}
-                className={styles.ingredientNameInput}
+                className={styles.nameInput}
                 placeholder="Ingredient name"
               />
               <button
                 type="button"
                 onClick={addIngredient}
                 className={styles.addButton}
+                disabled={!newIngredient.name || newIngredient.quantity <= 0}
               >
                 Add
               </button>
             </div>
-            <div className={styles.ingredientList}>
-              {ingredients.map((ing) => (
-                <div key={ing.id} className={styles.ingredientItem}>
-                  <span>{ing.quantity} {ing.unit} {ing.name}</span>
+            <ul className={styles.ingredientList}>
+              {ingredients.map((ingredient) => (
+                <li key={ingredient.id} className={styles.ingredientItem}>
+                  {ingredient.quantity} {ingredient.unit} {ingredient.name}
                   <button
                     type="button"
-                    onClick={() => removeIngredient(ing.id)}
+                    onClick={() => removeIngredient(ingredient.id)}
                     className={styles.removeButton}
                   >
                     ×
                   </button>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
           <div className={styles.section}>
             <label className={styles.label}>Instructions</label>
             <div className={styles.instructionInput}>
-              <textarea
+              <input
+                type="text"
                 value={newInstruction}
                 onChange={(e) => setNewInstruction(e.target.value)}
-                className={styles.textarea}
-                placeholder="Add an instruction step"
+                className={styles.input}
+                placeholder="Add a step..."
               />
               <button
                 type="button"
                 onClick={addInstruction}
                 className={styles.addButton}
+                disabled={!newInstruction.trim()}
               >
-                Add Step
+                Add
               </button>
             </div>
-            <div className={styles.instructionList}>
+            <ol className={styles.instructionList}>
               {instructions.map((instruction, index) => (
-                <div key={index} className={styles.instructionItem}>
-                  <span className={styles.stepNumber}>{index + 1}.</span>
-                  <span className={styles.instructionText}>{instruction}</span>
+                <li key={index} className={styles.instructionItem}>
+                  {instruction}
                   <button
                     type="button"
                     onClick={() => removeInstruction(index)}
@@ -176,18 +171,14 @@ const RecipeCardModal: React.FC<RecipeCardModalProps> = ({ card, onSubmit, onClo
                   >
                     ×
                   </button>
-                </div>
+                </li>
               ))}
-            </div>
+            </ol>
           </div>
 
-          <div className={styles.footer}>
-            <button type="submit" className={styles.submitButton}>
-              Save Recipe
-            </button>
-            <button type="button" onClick={onClose} className={styles.cancelButton}>
-              Cancel
-            </button>
+          <div className={styles.actions}>
+            <button type="submit" className={styles.submitButton}>Save Changes</button>
+            <button type="button" onClick={onClose} className={styles.cancelButton}>Cancel</button>
           </div>
         </form>
       </div>

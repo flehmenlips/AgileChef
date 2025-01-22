@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
-import { KanbanCard as CardType } from '../../../types/kanban';
+import { KanbanCard as CardType, RecipeStatus } from '../../../types/kanban';
 import { useBoardStore } from '../../../store/boardStore';
 import RecipeCardModal from './RecipeCardModal';
 import styles from './KanbanCard.module.css';
@@ -19,44 +19,43 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, index, columnId }) => {
     setIsEditing(true);
   };
 
-  const handleUpdate = (updates: Partial<CardType>) => {
-    const updatedCard = {
-      ...updates,
-      ingredients: updates.ingredients || [],
-      instructions: updates.instructions || [],
-      status: updates.status || 'dormant',
-    };
-    updateCard(columnId, card.id, updatedCard);
-    setIsEditing(false);
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this recipe?')) {
-      deleteCard(columnId, card.id);
+  const handleUpdate = async (updates: Partial<CardType>) => {
+    try {
+      await updateCard(columnId, card.id, updates);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update card:', error);
+      alert('Failed to update recipe. Please try again.');
     }
   };
 
-  const getStatusColor = (status: CardType['status']) => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this recipe?')) {
+      try {
+        await deleteCard(columnId, card.id);
+      } catch (error) {
+        console.error('Failed to delete card:', error);
+        alert('Failed to delete recipe. Please try again.');
+      }
+    }
+  };
+
+  const getStatusColor = (status: RecipeStatus) => {
     switch (status) {
-      case 'fully-stocked':
-        return styles.statusFullyStocked;
-      case 'low-stock':
-        return styles.statusLowStock;
-      case 'out-of-stock':
-        return styles.statusOutOfStock;
-      case 'in-progress':
-        return styles.statusInProgress;
-      case 'dormant':
-        return styles.statusDormant;
+      case RecipeStatus.ACTIVE:
+        return styles.statusActive;
+      case RecipeStatus.COMPLETED:
+        return styles.statusCompleted;
+      case RecipeStatus.DORMANT:
       default:
-        return '';
+        return styles.statusDormant;
     }
   };
 
   const ingredients = card.ingredients || [];
   const instructions = card.instructions || [];
-  const status = card.status || 'dormant';
+  const status = card.status || RecipeStatus.DORMANT;
 
   return (
     <>
@@ -92,6 +91,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, index, columnId }) => {
                 )}
               </div>
               <div className={styles.metadata}>
+                <span className={styles.status}>{status}</span>
                 {card.labels && card.labels.length > 0 && (
                   <div className={styles.labels}>
                     {card.labels.map((label) => (
@@ -101,34 +101,21 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, index, columnId }) => {
                     ))}
                   </div>
                 )}
-                <span className={`${styles.status} ${getStatusColor(status)}`}>
-                  {status.replace('-', ' ')}
-                </span>
+                <button
+                  onClick={handleDelete}
+                  className={styles.deleteButton}
+                  aria-label="Delete recipe"
+                >
+                  ×
+                </button>
               </div>
-            </div>
-            <div 
-              className={styles.cardActions}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={handleDelete}
-                className={`${styles.actionButton} ${styles.deleteButton}`}
-                title="Delete recipe"
-              >
-                ×
-              </button>
             </div>
           </div>
         )}
       </Draggable>
       {isEditing && (
         <RecipeCardModal
-          card={{
-            ...card,
-            ingredients,
-            instructions,
-            status,
-          }}
+          card={card}
           onSubmit={handleUpdate}
           onClose={() => setIsEditing(false)}
         />

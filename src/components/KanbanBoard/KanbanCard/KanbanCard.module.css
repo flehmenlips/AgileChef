@@ -1,167 +1,101 @@
 .card {
   background: white;
   border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 0.75rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  user-select: none;
+  padding: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   cursor: pointer;
-  position: relative;
   transition: all 0.2s ease;
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border-left: 4px solid transparent;
 }
 
 .card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   transform: translateY(-1px);
 }
 
-.card:focus {
-  outline: 2px solid #0052cc;
-  outline-offset: 2px;
-}
-
-.card.dragging {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  opacity: 0.9;
+.dragging {
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
 }
 
 .cardContent {
-  flex: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .title {
-  margin: 0 0 0.75rem;
+  margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #172b4d;
-  word-wrap: break-word;
+  color: #2d3748;
 }
 
 .recipePreview {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.85rem;
-  color: #5e6c84;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: #4a5568;
 }
 
-.ingredients,
-.steps {
+.ingredients, .steps {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-}
-
-.ingredients strong,
-.steps strong {
-  color: #172b4d;
+  gap: 4px;
 }
 
 .metadata {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
   align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.75rem;
+}
+
+.status {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.statusDormant {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.statusActive {
+  background-color: #9ae6b4;
+  color: #22543d;
+}
+
+.statusCompleted {
+  background-color: #90cdf4;
+  color: #2c5282;
 }
 
 .labels {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 4px;
 }
 
 .label {
-  font-size: 0.75rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: 12px;
-  background-color: #dfe1e6;
-  color: #42526e;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: #edf2f7;
+  color: #4a5568;
 }
 
-.status {
-  font-size: 0.75rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: 12px;
-  text-transform: capitalize;
-}
-
-.statusFullyStocked {
-  border-left-color: #36b37e;
-}
-.statusFullyStocked .status {
-  background-color: #e3fcef;
-  color: #006644;
-}
-
-.statusLowStock {
-  border-left-color: #ffab00;
-}
-.statusLowStock .status {
-  background-color: #fffae6;
-  color: #ff991f;
-}
-
-.statusOutOfStock {
-  border-left-color: #ff5630;
-}
-.statusOutOfStock .status {
-  background-color: #ffebe6;
-  color: #de350b;
-}
-
-.statusInProgress {
-  border-left-color: #0052cc;
-}
-.statusInProgress .status {
-  background-color: #deebff;
-  color: #0747a6;
-}
-
-.statusDormant {
-  border-left-color: #6b778c;
-}
-.statusDormant .status {
-  background-color: #f4f5f7;
-  color: #42526e;
-}
-
-.cardActions {
-  display: flex;
-  gap: 0.25rem;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.card:hover .cardActions {
-  opacity: 1;
-}
-
-.actionButton {
+.deleteButton {
   background: none;
   border: none;
-  color: #42526e;
+  color: #a0aec0;
   cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-size: 1.25rem;
-  width: 28px;
-  height: 28px;
+  padding: 2px 6px;
+  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
-.actionButton:hover {
-  background-color: #f4f5f7;
-}
-
 .deleteButton:hover {
-  background-color: #ffebe6;
-  color: #de350b;
+  background-color: #fed7d7;
+  color: #c53030;
 } 
