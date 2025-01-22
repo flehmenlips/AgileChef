@@ -23,6 +23,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </button>
           <h1 className={styles.logo}>AgileChef</h1>
         </div>
+        <div className={styles.headerCenter}>
+          {user && (
+            <div className={styles.welcomeMessage}>
+              Welcome, {user.firstName || 'Chef'}! Ready to create some amazing recipes?
+            </div>
+          )}
+        </div>
         <div className={styles.headerRight}>
           <button className={styles.iconButton} title="Search">
             🔍
@@ -36,6 +43,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className={styles.userProfile}>
             {user && (
               <>
+                <div className={styles.userInfo}>
+                  <div className={styles.userName}>
+                    {user.firstName} {user.lastName}
+                  </div>
+                  <div className={styles.userEmail}>
+                    {user.emailAddresses[0]?.emailAddress}
+                  </div>
+                </div>
                 <img 
                   src={user.imageUrl || "https://via.placeholder.com/32"}
                   alt={`${user.firstName || 'User'}'s avatar`}

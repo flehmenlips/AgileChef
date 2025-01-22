@@ -24,6 +24,28 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 200px;
+}
+
+.headerCenter {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.welcomeMessage {
+  font-size: 1.1rem;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 200px;
+  justify-content: flex-end;
 }
 
 .menuButton {
@@ -47,12 +69,6 @@
   margin: 0;
 }
 
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
 .iconButton {
   background: none;
   border: none;
@@ -70,13 +86,38 @@
 .userProfile {
   display: flex;
   align-items: center;
-  cursor: pointer;
+  gap: 12px;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.userProfile:hover {
+  background-color: #f3f4f6;
+}
+
+.userInfo {
+  text-align: right;
+  margin-right: 8px;
+}
+
+.userName {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.userEmail {
+  font-size: 0.8rem;
+  color: #6b7280;
 }
 
 .avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
+  border: 2px solid #e5e7eb;
 }
 
 /* Container and Sidebar */
@@ -208,6 +249,16 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .headerCenter {
+    display: none;
+  }
+  
+  .userInfo {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .sidebar {
     width: 200px;
