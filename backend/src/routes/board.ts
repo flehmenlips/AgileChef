@@ -36,16 +36,36 @@ router.get('/', ClerkExpressRequireAuth(), async (req, res) => {
 router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
   const { title } = req.body as CreateBoardRequest;
   try {
-    console.log('Creating board for user:', req.auth?.userId);
+    console.log('Creating board with title:', title);
+    console.log('User ID from auth:', req.auth?.userId);
+    
+    // First check if user exists
+    const user = await prisma.user.findUnique({
+      where: { clerkId: req.auth?.userId }
+    });
+    
+    if (!user) {
+      console.log('User not found in database. Creating user record...');
+      // Create user if they don't exist
+      await prisma.user.create({
+        data: {
+          id: req.auth?.userId,
+          clerkId: req.auth?.userId,
+          email: 'placeholder@example.com' // We'll update this via webhook
+        }
+      });
+    }
+    
     const board = await prisma.board.create({
       data: {
         title,
         userId: req.auth?.userId
       }
     });
+    console.log('Board created successfully:', board);
     res.json(board);
   } catch (error) {
-    console.error('Error creating board:', error);
+    console.error('Detailed error creating board:', error);
     res.status(500).json({ error: 'Failed to create board' });
   }
 });
