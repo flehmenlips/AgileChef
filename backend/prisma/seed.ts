@@ -5,13 +5,18 @@ const prisma = new PrismaClient();
 
 async function main() {
   try {
-    // Get the first user from the database to associate the board with
-    const user = await prisma.user.findFirst();
-    
-    if (!user) {
-      console.log('No user found in the database. Please ensure a user exists before running the seed script.');
-      return;
-    }
+    // Create a user first
+    const user = await prisma.user.create({
+      data: {
+        id: randomUUID(),
+        clerkId: 'test_clerk_id',
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+      }
+    });
+
+    console.log('Created test user:', user);
 
     // Create a board for the user
     const board = await prisma.board.create({

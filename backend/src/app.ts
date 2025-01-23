@@ -4,6 +4,7 @@ import webhookRoutes from './routes/webhooks';
 import boardRoutes from './routes/board';
 import columnRoutes from './routes/column';
 import cardRoutes from './routes/card';
+import organizationRoutes from './routes/organization';
 
 const app = express();
 
@@ -16,7 +17,7 @@ const corsOptions = {
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'svix-id', 'svix-timestamp', 'svix-signature'],
   exposedHeaders: ['Authorization'],
 };
 
@@ -29,6 +30,7 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/boards', boardRoutes);
 app.use('/api/columns', columnRoutes);
 app.use('/api/cards', cardRoutes);
+app.use('/api/organizations', organizationRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {

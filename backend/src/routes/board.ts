@@ -8,9 +8,10 @@ const router = express.Router();
 // Get all boards for the authenticated user
 router.get('/', ClerkExpressRequireAuth(), async (req, res) => {
   try {
+    console.log('Fetching boards for user:', req.auth?.userId);
     const boards = await prisma.board.findMany({
       where: {
-        userId: req.auth.userId
+        userId: req.auth?.userId
       },
       include: {
         columns: {
@@ -35,10 +36,11 @@ router.get('/', ClerkExpressRequireAuth(), async (req, res) => {
 router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
   const { title } = req.body as CreateBoardRequest;
   try {
+    console.log('Creating board for user:', req.auth?.userId);
     const board = await prisma.board.create({
       data: {
         title,
-        userId: req.auth.userId
+        userId: req.auth?.userId
       }
     });
     res.json(board);
@@ -58,7 +60,7 @@ router.put('/:boardId/columns', ClerkExpressRequireAuth(), async (req, res) => {
     const board = await prisma.board.findFirst({
       where: {
         id: boardId,
-        userId: req.auth.userId
+        userId: req.auth?.userId
       }
     });
 

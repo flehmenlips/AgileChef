@@ -9,11 +9,12 @@ const router = express.Router();
 router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
   const { title, boardId, order, limit } = req.body as CreateColumnRequest;
   try {
+    console.log('Creating column for board:', boardId, 'user:', req.auth?.userId);
     // Verify board ownership
     const board = await prisma.board.findFirst({
       where: {
         id: boardId,
-        userId: req.auth.userId
+        userId: req.auth?.userId
       }
     });
 
@@ -47,7 +48,7 @@ router.put('/:columnId/cards', ClerkExpressRequireAuth(), async (req, res) => {
       where: {
         id: columnId,
         board: {
-          userId: req.auth.userId
+          userId: req.auth?.userId
         }
       }
     });
