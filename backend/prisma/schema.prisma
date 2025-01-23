@@ -69,9 +69,10 @@ model Ingredient {
 }
 
 enum RecipeStatus {
+  FULLY_STOCKED
+  OUT_OF_STOCK
+  LOW_STOCK
   DORMANT
-  ACTIVE
-  COMPLETED
 }
 
 enum Unit {

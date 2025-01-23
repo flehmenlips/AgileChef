@@ -196,7 +196,12 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const token = get().token;
-      if (!token) throw new Error('No auth token available');
+      if (!token) {
+        // Try to get a fresh token
+        const newToken = await window.Clerk?.session?.getToken?.() || null;
+        if (!newToken) throw new Error('No auth token available');
+        get().setToken(newToken);
+      }
 
       const state = get();
       const boardId = state.columns[0]?.boardId;
@@ -204,7 +209,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
       const response = await makeRequest('/api/columns', {
         method: 'POST',
-        headers: getAuthHeaders(token),
+        headers: getAuthHeaders(get().token), // Use the potentially refreshed token
         body: JSON.stringify({ 
           title, 
           boardId,

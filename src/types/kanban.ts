@@ -27,9 +27,10 @@ export enum Unit {
 }
 
 export enum RecipeStatus {
-  DORMANT = 'DORMANT',
-  ACTIVE = 'ACTIVE',
-  COMPLETED = 'COMPLETED'
+  FULLY_STOCKED = 'FULLY_STOCKED',
+  OUT_OF_STOCK = 'OUT_OF_STOCK',
+  LOW_STOCK = 'LOW_STOCK',
+  DORMANT = 'DORMANT'
 }
 
 export interface KanbanCard {
