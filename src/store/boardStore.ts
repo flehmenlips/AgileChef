@@ -16,7 +16,7 @@ declare global {
 }
 
 // Store interface
-interface BoardState {
+export interface BoardState {
   columns: KanbanColumn[];
   isLoading: boolean;
   error: string | null;
@@ -264,12 +264,16 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   moveColumn: async (fromIndex: number, toIndex: number) => {
     try {
+      set({ isLoading: true, error: null });
       const token = get().token;
       if (!token) throw new Error('No auth token available');
 
       const newColumns = [...get().columns];
       const [movedColumn] = newColumns.splice(fromIndex, 1);
       newColumns.splice(toIndex, 0, movedColumn);
+
+      // Optimistically update the UI
+      set({ columns: newColumns });
 
       // Update the backend with new column order
       await makeRequest(`/api/columns/${movedColumn.id}/reorder`, {
@@ -284,13 +288,14 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         }),
       });
 
-      set({ columns: newColumns });
+      // No need to re-fetch or update state since our optimistic update matches the backend
     } catch (error) {
       console.error('Error moving column:', error);
       // Revert to previous state on error
       const state = get();
-      set({ columns: state.columns });
-      throw error;
+      set({ columns: state.columns, error: error instanceof Error ? error.message : 'Failed to move column' });
+    } finally {
+      set({ isLoading: false });
     }
   },
 
