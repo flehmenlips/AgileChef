@@ -143,7 +143,7 @@ router.put('/:columnId', ClerkExpressRequireAuth(), async (req, res) => {
 });
 
 // Update column order
-router.put('/reorder', ClerkExpressRequireAuth(), async (req, res) => {
+router.put('/:columnId/reorder', ClerkExpressRequireAuth(), async (req, res) => {
   const { boardId, columns } = req.body;
   
   try {
