@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
-import { KanbanCard, KanbanColumn, Ingredient, RecipeStatus } from '../types/kanban';
+import { KanbanCard, KanbanColumn, Ingredient, RecipeStatus, KanbanBoard } from '../types/kanban';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.agilechef.seabreeze.farm';
 
@@ -21,8 +21,9 @@ export interface BoardState {
   isLoading: boolean;
   error: string | null;
   token: string | null;
+  board: KanbanBoard | null;
   setToken: (token: string | null) => void;
-  fetchBoard: () => Promise<void>;
+  fetchBoard: (boardId: string) => Promise<void>;
   addColumn: (title: string) => Promise<void>;
   updateColumn: (columnId: string, title: string) => Promise<void>;
   deleteColumn: (columnId: string) => Promise<void>;
@@ -144,6 +145,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   isLoading: false,
   error: null,
   token: null,
+  board: null,
 
   clearError: () => set({ error: null }),
 
@@ -151,51 +153,39 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     console.log('Setting auth token:', token ? 'token present' : 'no token');
     set({ token });
     if (token) {
-      get().fetchBoard();
+      get().fetchBoard('');
     }
   },
 
-  fetchBoard: async () => {
+  fetchBoard: async (boardId: string) => {
     try {
       set({ isLoading: true, error: null });
       const token = get().token;
       if (!token) throw new Error('No auth token available');
 
-      const boards = await makeRequest('/api/boards', {
+      const board = await makeRequest(`/api/boards/${boardId}`, {
         method: 'GET',
         headers: getAuthHeaders(token),
       });
 
-      if (!boards || boards.length === 0) {
-        const defaultBoard = await makeRequest('/api/boards', {
-          method: 'POST',
-          headers: getAuthHeaders(token),
-          body: JSON.stringify({
-            title: 'Recipe Development Board',
-            columns: [
-              { title: 'To Do', order: 0 },
-              { title: 'In Progress', order: 1 },
-              { title: 'Done', order: 2 }
-            ]
-          })
-        });
-        set({ columns: defaultBoard.columns || [] });
-      } else {
-        const activeBoard = boards[0];
-        set({ columns: activeBoard.columns || [] });
-      }
+      set({ 
+        board,
+        columns: board.columns || [],
+        isLoading: false 
+      });
     } catch (error) {
       console.error('Error fetching board:', error);
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch board' });
-    } finally {
-      set({ isLoading: false });
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to fetch board',
+        isLoading: false 
+      });
     }
   },
 
   addColumn: async (title: string) => {
     try {
       set({ isLoading: true, error: null });
-      const token = get().token;
+      let token = get().token;
       if (!token) {
         // Try to get a fresh token
         const newToken = await window.Clerk?.session?.getToken?.() || null;
@@ -204,15 +194,15 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       }
 
       const state = get();
-      const boardId = state.columns[0]?.boardId;
-      if (!boardId) throw new Error('No board found');
+      const board = state.board;
+      if (!board?.id) throw new Error('No board found');
 
       const response = await makeRequest('/api/columns', {
         method: 'POST',
         headers: getAuthHeaders(get().token), // Use the potentially refreshed token
         body: JSON.stringify({ 
           title, 
-          boardId,
+          boardId: board.id,
           order: state.columns.length 
         })
       });
@@ -500,7 +490,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       console.error('Error moving card:', error);
       set({ error: error instanceof Error ? error.message : 'Failed to move card' });
       // Revert the optimistic update by re-fetching the board
-      get().fetchBoard();
+      get().fetchBoard('');
     }
   }
 })); 
