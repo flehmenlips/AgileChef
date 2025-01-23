@@ -71,8 +71,14 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
 
 // Update a recipe card
 router.put('/:cardId', ClerkExpressRequireAuth(), async (req, res) => {
+  console.log('=== Card Update Attempt ===');
+  console.log('Request received at:', new Date().toISOString());
+  console.log('User ID:', req.auth.userId);
+  console.log('Card ID:', req.params.cardId);
+  console.log('Incoming request body:', req.body);
+  
   const { cardId } = req.params;
-  const { title, description, status, instructions, labels, ingredients, columnId, order } = req.body as UpdateCardRequest;
+  const updateData = req.body as UpdateCardRequest;
   
   try {
     // Verify card ownership through board
@@ -88,47 +94,73 @@ router.put('/:cardId', ClerkExpressRequireAuth(), async (req, res) => {
     });
 
     if (!card) {
+      console.log('Card not found:', cardId);
       return res.status(404).json({ error: 'Card not found' });
     }
 
     // Delete existing ingredients if new ones are provided
-    if (ingredients) {
+    if (updateData.ingredients) {
+      console.log('Deleting existing ingredients for card:', cardId);
       await prisma.ingredient.deleteMany({
         where: { cardId }
       });
     }
 
+    // Prepare update data
+    const data: any = {
+      title: updateData.title,
+      description: updateData.description,
+      status: updateData.status,
+      instructions: updateData.instructions,
+      labels: updateData.labels,
+      columnId: updateData.columnId,
+      order: updateData.order
+    };
+
+    // Only include defined fields
+    Object.keys(data).forEach(key => {
+      if (data[key] === undefined) {
+        delete data[key];
+      }
+    });
+
+    // Add ingredients if provided
+    if (updateData.ingredients) {
+      data.ingredients = {
+        create: updateData.ingredients.map((ingredient) => ({
+          id: randomUUID(),
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit
+        }))
+      };
+    }
+
+    console.log('Updating card with data:', data);
+
     // Update card and create new ingredients
     const updatedCard = await prisma.card.update({
       where: { id: cardId },
-      data: {
-        ...(title && { title }),
-        ...(description && { description }),
-        ...(status && { status }),
-        ...(instructions && { instructions }),
-        ...(labels && { labels }),
-        ...(columnId && { columnId }),
-        ...(typeof order === 'number' && { order }),
-        ...(ingredients && {
-          ingredients: {
-            create: ingredients.map((ingredient) => ({
-              id: crypto.randomUUID(),
-              name: ingredient.name,
-              quantity: ingredient.quantity,
-              unit: ingredient.unit
-            }))
-          }
-        })
-      },
+      data,
       include: {
         ingredients: true
       }
     });
 
+    console.log('Card updated successfully:', updatedCard);
     res.json(updatedCard);
   } catch (error) {
     console.error('Error updating card:', error);
-    res.status(500).json({ error: 'Failed to update card' });
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      if ('code' in error) {
+        console.error('Prisma error code:', (error as any).code);
+      }
+    }
+    res.status(500).json({ 
+      error: 'Failed to update card',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
