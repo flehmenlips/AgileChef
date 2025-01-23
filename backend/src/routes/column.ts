@@ -142,4 +142,38 @@ router.put('/:columnId', ClerkExpressRequireAuth(), async (req, res) => {
   }
 });
 
+// Update column order
+router.put('/reorder', ClerkExpressRequireAuth(), async (req, res) => {
+  const { boardId, columns } = req.body;
+  
+  try {
+    // Verify board ownership
+    const board = await prisma.board.findFirst({
+      where: {
+        id: boardId,
+        userId: req.auth?.userId
+      }
+    });
+
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+
+    // Update each column's order
+    await Promise.all(
+      columns.map((column: { id: string; order: number }) =>
+        prisma.column.update({
+          where: { id: column.id },
+          data: { order: column.order }
+        })
+      )
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating column order:', error);
+    res.status(500).json({ error: 'Failed to update column order' });
+  }
+});
+
 export default router; 
