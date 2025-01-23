@@ -43,10 +43,12 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ card, index, columnId }) => {
 
   const getStatusColor = (status: RecipeStatus) => {
     switch (status) {
-      case RecipeStatus.ACTIVE:
-        return styles.statusActive;
-      case RecipeStatus.COMPLETED:
-        return styles.statusCompleted;
+      case RecipeStatus.FULLY_STOCKED:
+        return styles.statusFullyStocked;
+      case RecipeStatus.LOW_STOCK:
+        return styles.statusLowStock;
+      case RecipeStatus.OUT_OF_STOCK:
+        return styles.statusOutOfStock;
       case RecipeStatus.DORMANT:
       default:
         return styles.statusDormant;

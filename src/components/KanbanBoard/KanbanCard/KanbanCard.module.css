@@ -62,14 +62,19 @@
   color: #4a5568;
 }
 
-.statusActive {
+.statusFullyStocked {
   background-color: #9ae6b4;
   color: #22543d;
 }
 
-.statusCompleted {
-  background-color: #90cdf4;
-  color: #2c5282;
+.statusLowStock {
+  background-color: #fbd38d;
+  color: #744210;
+}
+
+.statusOutOfStock {
+  background-color: #feb2b2;
+  color: #822727;
 }
 
 .labels {

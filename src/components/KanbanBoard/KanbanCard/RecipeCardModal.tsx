@@ -81,8 +81,9 @@ const RecipeCardModal: React.FC<RecipeCardModalProps> = ({ card, onSubmit, onClo
               className={styles.select}
             >
               <option value={RecipeStatus.DORMANT}>Dormant</option>
-              <option value={RecipeStatus.ACTIVE}>Active</option>
-              <option value={RecipeStatus.COMPLETED}>Completed</option>
+              <option value={RecipeStatus.FULLY_STOCKED}>Fully Stocked</option>
+              <option value={RecipeStatus.LOW_STOCK}>Low Stock</option>
+              <option value={RecipeStatus.OUT_OF_STOCK}>Out of Stock</option>
             </select>
           </div>
 
