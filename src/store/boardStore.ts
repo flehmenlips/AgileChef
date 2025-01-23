@@ -163,14 +163,23 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       const token = get().token;
       if (!token) throw new Error('No auth token available');
 
-      const board = await makeRequest(`/api/boards/${boardId}`, {
+      const boards = await makeRequest(`/api/boards`, {
         method: 'GET',
         headers: getAuthHeaders(token),
       });
 
+      // Get the first board or create a new one if none exists
+      const currentBoard = Array.isArray(boards) && boards.length > 0 
+        ? boards[0] 
+        : await makeRequest('/api/boards', {
+            method: 'POST',
+            headers: getAuthHeaders(token),
+            body: JSON.stringify({ title: 'Recipe Development Board' })
+          });
+
       set({ 
-        board,
-        columns: board.columns || [],
+        board: currentBoard,
+        columns: currentBoard.columns || [],
         isLoading: false 
       });
     } catch (error) {
