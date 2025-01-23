@@ -17,7 +17,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps, curl requests, or Clerk webhooks)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) === -1) {
@@ -33,18 +33,20 @@ app.use(cors({
 // Parse JSON bodies
 app.use(express.json());
 
-// Add Clerk authentication middleware
-app.use(ClerkExpressWithAuth());
-
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Routes
+// Register webhook routes before authentication middleware
+app.use('/api/webhooks', webhookRoutes);
+
+// Add Clerk authentication middleware
+app.use(ClerkExpressWithAuth());
+
+// Protected routes
 app.use('/api/boards', boardRoutes);
 app.use('/api/columns', columnRoutes);
 app.use('/api/cards', cardRoutes);
-app.use('/api/webhooks', webhookRoutes);
 
 export default app; 
