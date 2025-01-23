@@ -3,6 +3,8 @@ export interface KanbanColumn {
   title: string;
   cards: KanbanCard[];
   limit?: number;
+  boardId: string;
+  order: number;
 }
 
 export interface Ingredient {

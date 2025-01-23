@@ -16,7 +16,21 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, (error) => {
+  console.error('Request interceptor error:', error);
+  return Promise.reject(error);
 });
+
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.log('Response status:', error.response?.status);
+    console.log('Response text:', JSON.stringify(error.response?.data));
+    console.log('Response headers:', error.response?.headers);
+    return Promise.reject(error);
+  }
+);
 
 export const boardApi = {
   // Board operations

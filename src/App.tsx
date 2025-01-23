@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { DropResult } from '@hello-pangea/dnd';
-import { BrowserRouter, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Route, createRoutesFromElements, Navigate } from 'react-router-dom';
 import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
 import Layout from './components/Layout/Layout';
 import KanbanBoard from './components/KanbanBoard/KanbanBoard';
@@ -22,96 +22,59 @@ const AuthPage: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
+const LoadingFallback = () => (
+  <div className={styles.loadingContainer}>
+    <div className={styles.loadingSpinner} />
+    <p>Loading...</p>
+  </div>
+);
+
 const AppContent: React.FC = () => {
   const { isSignedIn, isLoaded, getToken } = useAuth();
-  const navigate = useNavigate();
   const setToken = useBoardStore((state) => state.setToken);
 
   // Set up auth token
   useEffect(() => {
     const setupAuth = async () => {
+      if (!isLoaded) return;
+      
       if (isSignedIn) {
         try {
           const token = await getToken();
-          setToken(token);
+          if (token) {
+            localStorage.setItem('clerk-token', token);
+            setToken(token);
+          } else {
+            localStorage.removeItem('clerk-token');
+            setToken(null);
+          }
         } catch (error) {
           console.error('Failed to get auth token:', error);
+          localStorage.removeItem('clerk-token');
           setToken(null);
         }
       } else {
+        localStorage.removeItem('clerk-token');
         setToken(null);
       }
     };
     
     setupAuth();
-  }, [isSignedIn, setToken, getToken]);
-
-  // Only log once when auth state changes
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Auth state changed:', { isSignedIn, isLoaded });
-    }
-  }, [isSignedIn, isLoaded]);
+  }, [isSignedIn, isLoaded, setToken, getToken]);
 
   if (!isLoaded) {
-    return <div>Loading...</div>;
+    return <LoadingFallback />;
   }
 
   return (
-    <Routes>
-      <Route 
-        path="/sign-in/*" 
-        element={
-          isSignedIn ? (
-            <Navigate to="/" replace />
-          ) : (
-            <AuthPage>
-              <SignIn 
-                routing="path" 
-                path="/sign-in" 
-                afterSignInUrl="/"
-                signUpUrl="/sign-up"
-              />
-            </AuthPage>
-          )
-        } 
-      />
-      <Route 
-        path="/sign-up/*" 
-        element={
-          isSignedIn ? (
-            <Navigate to="/" replace />
-          ) : (
-            <AuthPage>
-              <SignUp 
-                routing="path" 
-                path="/sign-up"
-                afterSignUpUrl="/"
-                signInUrl="/sign-in"
-              />
-            </AuthPage>
-          )
-        } 
-      />
-      <Route
-        path="/"
-        element={
-          !isLoaded ? (
-            <div>Loading...</div>
-          ) : !isSignedIn ? (
-            <Navigate to="/sign-in" replace />
-          ) : (
-            <KanbanBoardPage />
-          )
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <Layout>
+      {isSignedIn ? <KanbanBoardPage /> : <Navigate to="/sign-in" replace />}
+    </Layout>
   );
 };
 
 const KanbanBoardPage: React.FC = () => {
-  const { columns, moveCard, addColumn, moveColumn } = useBoardStore();
+  const { columns, moveCard, addColumn, moveColumn, isLoading, error } = useBoardStore();
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -133,8 +96,21 @@ const KanbanBoardPage: React.FC = () => {
     );
   };
 
+  if (isLoading) {
+    return <LoadingFallback />;
+  }
+
+  if (error) {
+    return (
+      <div className={styles.errorContainer}>
+        <p>Error: {error}</p>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </div>
+    );
+  }
+
   return (
-    <Layout>
+    <div>
       <div className={styles.pageHeader}>
         <h2 className={styles.pageTitle}>Recipe Development Board</h2>
         <p className={styles.pageDescription}>
@@ -147,18 +123,31 @@ const KanbanBoardPage: React.FC = () => {
         onAddColumn={addColumn}
         onMoveColumn={moveColumn}
       />
-    </Layout>
+    </div>
   );
 };
 
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route path="/">
+      <Route path="sign-in/*" element={<AuthPage><SignIn routing="path" path="/sign-in" afterSignInUrl="/" signUpUrl="/sign-up" /></AuthPage>} />
+      <Route path="sign-up/*" element={<AuthPage><SignUp routing="path" path="/sign-up" afterSignUpUrl="/" signInUrl="/sign-in" /></AuthPage>} />
+      <Route index element={<AppContent />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Route>
+  ),
+  {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true
+    }
+  }
+);
+
 const App: React.FC = () => {
   return (
-    <ClerkProvider 
-      publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
-    >
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+    <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
+      <RouterProvider router={router} fallback={<LoadingFallback />} />
     </ClerkProvider>
   );
 };
