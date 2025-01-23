@@ -213,7 +213,10 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       });
 
       set(state => ({
-        columns: [...state.columns, response]
+        columns: [...state.columns, {
+          ...response,
+          cards: response.cards || []
+        }]
       }));
     } catch (error) {
       console.error('Error adding column:', error);

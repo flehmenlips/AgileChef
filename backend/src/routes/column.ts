@@ -28,6 +28,9 @@ router.post('/', ClerkExpressRequireAuth(), async (req, res) => {
         boardId,
         order,
         limit
+      },
+      include: {
+        cards: true
       }
     });
     res.json(column);
