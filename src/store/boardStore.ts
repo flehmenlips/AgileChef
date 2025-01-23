@@ -51,7 +51,7 @@ const getAuthHeaders = (token: string | null) => {
 };
 
 // Helper function to handle API responses
-const handleResponse = async (response: Response) => {
+const handleResponse = async (response: Response, originalOptions?: RequestInit) => {
   const text = await response.text();
   console.log('Response status:', response.status);
   console.log('Response text:', text);
@@ -60,18 +60,17 @@ const handleResponse = async (response: Response) => {
   if (!response.ok) {
     if (response.status === 401) {
       console.error('Authentication error - attempting to refresh session');
-      // Instead of immediately clearing the token, try to refresh the session
       try {
         // Attempt to get a new token from Clerk
         const token = await window.Clerk?.session?.getToken?.() || null;
-        if (token) {
+        if (token && originalOptions) {
           console.log('Successfully refreshed token');
           useBoardStore.getState().setToken(token);
           // Retry the original request with the new token
           const retryResponse = await fetch(response.url, {
-            ...response,
+            ...originalOptions,
             headers: {
-              ...response.headers,
+              ...originalOptions.headers,
               'Authorization': `Bearer ${token}`
             }
           });
@@ -79,7 +78,6 @@ const handleResponse = async (response: Response) => {
         }
       } catch (refreshError) {
         console.error('Failed to refresh token:', refreshError);
-        // Only clear token if refresh fails
         useBoardStore.getState().setToken(null);
         throw new Error('Authentication failed - please sign in again');
       }
@@ -93,7 +91,7 @@ const handleResponse = async (response: Response) => {
     console.error('Failed to parse response JSON:', e);
     throw new Error('Invalid response from server');
   }
-};
+}
 
 // Helper function to make API requests
 const makeRequest = async (endpoint: string, options: RequestInit) => {
@@ -128,7 +126,7 @@ const makeRequest = async (endpoint: string, options: RequestInit) => {
       ...options,
       credentials: 'include',
     });
-    return await handleResponse(response);
+    return await handleResponse(response, options);
   } catch (error) {
     console.error('API request failed:', error);
     throw error;
