@@ -198,10 +198,18 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       const token = get().token;
       if (!token) throw new Error('No auth token available');
 
+      const state = get();
+      const boardId = state.columns[0]?.boardId;
+      if (!boardId) throw new Error('No board found');
+
       const response = await makeRequest('/api/columns', {
         method: 'POST',
         headers: getAuthHeaders(token),
-        body: JSON.stringify({ title, order: get().columns.length })
+        body: JSON.stringify({ 
+          title, 
+          boardId,
+          order: state.columns.length 
+        })
       });
 
       set(state => ({
