@@ -239,16 +239,13 @@ export const useBoardStore = create<BoardState>((set, get) => ({
         body: JSON.stringify(updates),
       });
 
+      // Update local state with the response from the server
       set((state) => ({
-        columns: state.columns.map((col) => {
-          if (col.id === columnId) {
-            return {
-              ...col,
-              ...updatedColumn,
-            };
-          }
-          return col;
-        }),
+        columns: state.columns.map((col) =>
+          col.id === columnId
+            ? { ...col, ...updatedColumn }
+            : col
+        ),
       }));
     } catch (error) {
       console.error('Error updating column:', error);
