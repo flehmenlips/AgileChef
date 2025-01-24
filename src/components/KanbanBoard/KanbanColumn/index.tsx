@@ -24,28 +24,43 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, index }) => {
       alert('Column has reached its card limit');
       return;
     }
-    addCard(column.id, cardData.title, cardData.description);
+    addCard(column.id, cardData.title);
     setIsAddingCard(false);
   };
 
-  const handleTitleSubmit = (e: React.FormEvent) => {
+  const handleTitleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editedTitle.trim()) {
-      updateColumn(column.id, { title: editedTitle.trim() });
-      setIsEditingTitle(false);
+      try {
+        await updateColumn(column.id, { title: editedTitle.trim() });
+        setIsEditingTitle(false);
+      } catch (error) {
+        console.error('Failed to update column title:', error);
+        alert('Failed to update column title. Please try again.');
+      }
     }
   };
 
-  const handleLimitSubmit = (e: React.FormEvent) => {
+  const handleLimitSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const limit = editedLimit ? parseInt(editedLimit, 10) : undefined;
-    updateColumn(column.id, { limit });
-    setIsEditingLimit(false);
+    try {
+      const limit = editedLimit ? parseInt(editedLimit, 10) : undefined;
+      await updateColumn(column.id, { limit });
+      setIsEditingLimit(false);
+    } catch (error) {
+      console.error('Failed to update column limit:', error);
+      alert('Failed to update column limit. Please try again.');
+    }
   };
 
-  const handleDeleteColumn = () => {
+  const handleDeleteColumn = async () => {
     if (window.confirm('Are you sure you want to delete this column and all its cards?')) {
-      deleteColumn(column.id);
+      try {
+        await deleteColumn(column.id);
+      } catch (error) {
+        console.error('Failed to delete column:', error);
+        alert('Failed to delete column. Please try again.');
+      }
     }
   };
 
@@ -129,7 +144,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ column, index }) => {
                 className={styles.addCardButton}
                 disabled={column.limit ? column.cards.length >= column.limit : false}
               >
-                + Add Card
+                Add Recipe
               </button>
             )}
           </div>

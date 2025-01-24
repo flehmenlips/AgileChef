@@ -25,7 +25,7 @@ export interface BoardState {
   setToken: (token: string | null) => void;
   fetchBoard: (boardId: string) => Promise<void>;
   addColumn: (title: string) => Promise<void>;
-  updateColumn: (columnId: string, title: string) => Promise<void>;
+  updateColumn: (columnId: string, updates: { title?: string; limit?: number }) => Promise<void>;
   deleteColumn: (columnId: string) => Promise<void>;
   moveColumn: (fromIndex: number, toIndex: number) => Promise<void>;
   addCard: (columnId: string, title: string) => Promise<void>;
@@ -228,7 +228,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }
   },
 
-  updateColumn: async (columnId: string, title: string) => {
+  updateColumn: async (columnId: string, updates: { title?: string; limit?: number }) => {
     try {
       const token = get().token;
       if (!token) throw new Error('No auth token available');
@@ -236,7 +236,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       const updatedColumn = await makeRequest(`/api/columns/${columnId}`, {
         method: 'PUT',
         headers: getAuthHeaders(token),
-        body: JSON.stringify({ title }),
+        body: JSON.stringify(updates),
       });
 
       set((state) => ({

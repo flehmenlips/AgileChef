@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
-import { Card } from '../../../store/boardStore';
-import styles from './KanbanCard.module.css';
+import { KanbanCard } from '../../../types/kanban';
+import styles from './CardForm.module.css';
 
 interface CardFormProps {
-  card?: Card;
-  onSubmit: (cardData: Partial<Card>) => void;
+  card?: KanbanCard;
+  onSubmit: (cardData: Partial<KanbanCard>) => void;
   onCancel: () => void;
 }
 
 const CardForm: React.FC<CardFormProps> = ({ card, onSubmit, onCancel }) => {
   const [title, setTitle] = useState(card?.title || '');
   const [description, setDescription] = useState(card?.description || '');
-  const [priority, setPriority] = useState(card?.priority || 'medium');
   const [labels, setLabels] = useState<string[]>(card?.labels || []);
   const [newLabel, setNewLabel] = useState('');
 
@@ -20,7 +19,6 @@ const CardForm: React.FC<CardFormProps> = ({ card, onSubmit, onCancel }) => {
     onSubmit({
       title,
       description,
-      priority: priority as 'low' | 'medium' | 'high',
       labels: labels.length > 0 ? labels : undefined,
     });
   };
@@ -51,12 +49,13 @@ const CardForm: React.FC<CardFormProps> = ({ card, onSubmit, onCancel }) => {
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Card title"
+        placeholder="Recipe title"
         className={styles.input}
         autoFocus
         onKeyDown={handleKeyPress}
+        required
       />
-      
+
       <textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
@@ -66,20 +65,7 @@ const CardForm: React.FC<CardFormProps> = ({ card, onSubmit, onCancel }) => {
       />
 
       <div className={styles.formSection}>
-        <label className={styles.label}>Priority:</label>
-        <select
-          value={priority}
-          onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
-          className={styles.select}
-        >
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-      </div>
-
-      <div className={styles.formSection}>
-        <label className={styles.label}>Labels:</label>
+        <label className={styles.label}>Labels</label>
         <div className={styles.labelInput}>
           <input
             type="text"
@@ -98,29 +84,33 @@ const CardForm: React.FC<CardFormProps> = ({ card, onSubmit, onCancel }) => {
             type="button"
             onClick={addLabel}
             className={styles.addLabelButton}
+            disabled={!newLabel.trim()}
           >
             Add
           </button>
         </div>
-        <div className={styles.labels}>
-          {labels.map((label) => (
-            <span key={label} className={styles.label}>
-              {label}
-              <button
-                type="button"
-                onClick={() => removeLabel(label)}
-                className={styles.removeLabel}
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
+        {labels.length > 0 && (
+          <div className={styles.labels}>
+            {labels.map((label) => (
+              <span key={label} className={styles.label}>
+                {label}
+                <button
+                  type="button"
+                  onClick={() => removeLabel(label)}
+                  className={styles.removeLabel}
+                  aria-label={`Remove ${label} label`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className={styles.buttonGroup}>
         <button type="submit" className={styles.submitButton}>
-          {card ? 'Update' : 'Add'} Card
+          {card ? 'Update' : 'Add'} Recipe
         </button>
         <button
           type="button"
@@ -132,6 +122,6 @@ const CardForm: React.FC<CardFormProps> = ({ card, onSubmit, onCancel }) => {
       </div>
     </form>
   );
-};
+}
 
 export default CardForm; 
