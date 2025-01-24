@@ -16,11 +16,17 @@ const CardForm: React.FC<CardFormProps> = ({ card, onSubmit, onCancel }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      title,
-      description,
-      labels: labels.length > 0 ? labels : undefined,
-    });
+    if (card) {
+      // Edit mode - include all fields
+      onSubmit({
+        title,
+        description,
+        labels: labels.length > 0 ? labels : undefined,
+      });
+    } else {
+      // Create mode - only include title
+      onSubmit({ title });
+    }
   };
 
   const addLabel = () => {
@@ -56,57 +62,61 @@ const CardForm: React.FC<CardFormProps> = ({ card, onSubmit, onCancel }) => {
         required
       />
 
-      <textarea
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Add a description..."
-        className={styles.textarea}
-        onKeyDown={handleKeyPress}
-      />
-
-      <div className={styles.formSection}>
-        <label className={styles.label}>Labels</label>
-        <div className={styles.labelInput}>
-          <input
-            type="text"
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            placeholder="Add a label"
-            className={styles.input}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                addLabel();
-              }
-            }}
+      {card && (
+        <>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Add a description..."
+            className={styles.textarea}
+            onKeyDown={handleKeyPress}
           />
-          <button
-            type="button"
-            onClick={addLabel}
-            className={styles.addLabelButton}
-            disabled={!newLabel.trim()}
-          >
-            Add
-          </button>
-        </div>
-        {labels.length > 0 && (
-          <div className={styles.labels}>
-            {labels.map((label) => (
-              <span key={label} className={styles.label}>
-                {label}
-                <button
-                  type="button"
-                  onClick={() => removeLabel(label)}
-                  className={styles.removeLabel}
-                  aria-label={`Remove ${label} label`}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
+
+          <div className={styles.formSection}>
+            <label className={styles.label}>Labels</label>
+            <div className={styles.labelInput}>
+              <input
+                type="text"
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                placeholder="Add a label"
+                className={styles.input}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addLabel();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={addLabel}
+                className={styles.addLabelButton}
+                disabled={!newLabel.trim()}
+              >
+                Add
+              </button>
+            </div>
+            {labels.length > 0 && (
+              <div className={styles.labels}>
+                {labels.map((label) => (
+                  <span key={label} className={styles.label}>
+                    {label}
+                    <button
+                      type="button"
+                      onClick={() => removeLabel(label)}
+                      className={styles.removeLabel}
+                      aria-label={`Remove ${label} label`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       <div className={styles.buttonGroup}>
         <button type="submit" className={styles.submitButton}>
